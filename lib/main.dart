@@ -1,7 +1,18 @@
+// lib/main.dart
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; 
+import 'package:timeismoney/providers/timer_controller.dart'; 
+// Import du nouveau Splash Screen
+import 'package:timeismoney/screens/splash_screen.dart'; 
 
 void main() {
-  runApp(const TimeIsMoneyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => TimerController(), 
+      child: const TimeIsMoneyApp(),
+    ),
+  );
 }
 
 class TimeIsMoneyApp extends StatelessWidget {
@@ -11,10 +22,14 @@ class TimeIsMoneyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Time Is Money',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        brightness: Brightness.dark, 
+        primarySwatch: Colors.teal,
+        scaffoldBackgroundColor: Colors.black,
       ),
-      home: const Placeholder(), // On remplacera par l'écran principal
+      // Démarrage sur le Splash Screen au lieu du HomeScreen
+      home: const SplashScreen(), 
     );
   }
 }

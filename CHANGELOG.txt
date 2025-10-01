@@ -1,0 +1,40 @@
+CHANGELOG
+================================================================================
+
+Date : [Date du jour : 01/10/2025]
+
+--------------------------------------------------------------------------------
+V. 1.1.0 - Refonte des Taux & Affichage Net/Brut
+--------------------------------------------------------------------------------
+
+NOUVELLES FONCTIONNALITÉS MAJEURES
+
+* **Taux Net Réglable par l'Utilisateur :**
+    * Ajout d'un paramètre persistant permettant à l'utilisateur de définir le pourcentage du taux BRUT qu'il reçoit en NET (par défaut 77% pour la France). Ce taux est réglable dans l'écran des Réglages.
+    * Tous les calculs d'estimation (heure, mensuel, annuel) utilisent désormais ce taux pour fournir des chiffres NETS personnalisés.
+
+AMÉLIORATIONS UX/UI
+
+* **Affichage Prioritaire du Gain NET :**
+    * Le **compteur principal** affiche désormais le gain **NET** (grosse police, couleur Jaune/Or).
+    * Le gain **BRUT** est affiché comme référence secondaire (police légèrement plus grande que la normale, couleur Verte).
+* **Visibilité de la Source du Taux :**
+    * La source du taux est affichée clairement sous le compteur de gains principal pour une meilleure traçabilité.
+
+--------------------------------------------------------------------------------
+V. 1.0.0 - Initialisation du Projet : Compteur Fonctionnel
+--------------------------------------------------------------------------------
+
+NOUVELLES FONCTIONNALITÉS
+
+* **Compteur Temps/Gains Fonctionnel :**
+    * Implémentation du compteur de temps principal (Heures:Minutes:Secondes).
+    * Calcul des gains en temps réel basé sur un taux horaire défini.
+* **Taux Horaire Modifiable et Persistant :**
+    * L'utilisateur peut définir son propre taux horaire et sa devise, qui sont sauvegardés entre les sessions.
+* **Préréglages de Taux (Presets) :**
+    * Ajout d'une liste de taux prédéfinis (SMIC, métiers IT, salaires fun/sportifs, etc.) regroupés par catégorie.
+* **Estimations de Salaire BRUT :**
+    * Affichage des estimations de salaire Brut Mensuel et Annuel (basées sur 35h/semaine).
+
+================================================================================
