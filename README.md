@@ -1,51 +1,61 @@
-# 💰 Time Is Money 💸
+# 💰 Time Is Money
 ## Suivi de Gains en Temps Réel
 
-Bienvenue dans **Time Is Money**, une application Flutter simple mais puissante conçue pour visualiser la valeur de votre temps en argent. Que vous soyez freelance, employé, ou simplement curieux de la valeur de vos minutes, cette application calcule et affiche vos gains en temps réel, basés sur un taux horaire personnalisable.
+Bienvenue dans **Time Is Money**, une application Flutter conçue pour visualiser la valeur de votre temps en argent. Elle calcule et affiche vos gains en temps réel, basés sur un taux horaire configurable.
 
 ---
 
-## ✨ Fonctionnalités Principales (V. 1.1.0)
+## ✨ État actuel (v1.1.0)
 
-### 📈 Calculs Financiers Avancés
-* **Gains NETS Prioritaires :** Le compteur principal affiche désormais vos gains **NETS** en temps réel.
-* **Taux Net/Brut Réglable :** Personnalisez le taux de conversion NET/BRUT (ex: 77% pour la France) dans les réglages pour des estimations précises basées sur votre statut.
-* **Référence BRUT :** Le gain BRUT est affiché comme référence secondaire, vous donnant une vue complète des chiffres.
-* **Estimations Annuelles :** Calculs projetés de vos revenus Mensuels et Annuels (Brut et Net) basés sur votre taux horaire actuel (Base 35h/semaine).
+Voici les changements et améliorations notables présents dans la version 1.1.0 :
 
-### ⏱️ Expérience Utilisateur
-* **Chronométrage Simple :** Boutons START/STOP et RESET pour gérer facilement votre session de gains.
-* **Taux Personnalisable et Persistant :** Définissez votre propre taux horaire et devise (ex: €/h, $/h) ; l'application mémorise vos choix.
-* **Préréglages Fun & Référents :** Accédez à une liste de taux prédéfinis (SMIC, métiers IT, taux fun) pour une configuration rapide ou pour comparer.
+- Architecture et tests
+    - Persistance extraite derrière une interface `IStorageService` et implémentation `SharedPreferences`.
+    - Tests unitaires ajoutés (fake storage pour les tests) couvrant la logique du `TimerController`.
+
+- UX / Splash
+    - Un `AnimatedHourglass` (CustomPainter) fournit un sablier animé fiable comme fallback local (plus robuste que dépendances réseau).
+    - Fond animé optionnel : particules de symboles monétaires (mode "neige"), optimisé pour faible consommation CPU.
+
+- Divers
+    - Nouvelle barre de footer `FooterBar` affichant les crédits ("Créé par XR") et la version du build.
+    - Lecture de la version : priorité sur `pubspec.yaml` embarqué → fallback `PackageInfo`.
+    - Script d'automatisation `scripts/update_version.ps1` pour incrémenter le build number d'après le nombre de commits Git et relancer `flutter pub get`.
 
 ---
 
 ## 🛠️ Installation et Démarrage
 
-Ce projet est développé avec Flutter.
+Pré-requis
 
-### Prérequis
-* [Flutter SDK](https://flutter.dev/docs/get-started/install) installé.
-* Un éditeur de code (VS Code ou Android Studio).
+- [Flutter SDK](https://flutter.dev/docs/get-started/install)
+- Un éditeur (VS Code, Android Studio, ...)
 
-### Étapes
-1.  **Cloner le dépôt :**
-    ```bash
-    git clone [URL_DE_VOTRE_DEPOT]
-    cd time-is-money
-    ```
-2.  **Télécharger les dépendances :**
-    ```bash
-    flutter pub get
-    ```
-3.  **Lancer l'application :**
-    ```bash
-    flutter run
-    ```
-    *(Assurez-vous d'avoir un appareil ou un émulateur connecté.)*
+Étapes rapides
+
+1. Cloner le dépôt :
+
+     git clone [URL_DE_VOTRE_DEPOT]
+     cd TimeIsMoney
+
+2. Installer les dépendances :
+
+     flutter pub get
+
+3. Lancer l'application :
+
+     flutter run
+
+Notes sur la version affichée dans le footer
+
+- La valeur affichée dans la barre de footer suit cette priorité :
+    1) valeur fournie explicitement au widget (rare),
+    2) lecture de `pubspec.yaml` (si le fichier est listé dans les assets et empaqueté),
+    3) `PackageInfo.fromPlatform()` (fallback).
+- Pour que la lecture depuis `pubspec.yaml` fonctionne, exécutez `flutter pub get` puis rebuild, ou utilisez le script `scripts/update_version.ps1` pour mettre à jour le champ `version` et réexécuter `flutter pub get`.
 
 ---
 
-## 🚀 Prochaine Étape
+## 🚀 Prochaine fonctionnalité prioritaire
 
-La prochaine fonctionnalité majeure prévue est l'implémentation de l'**Historique et de la Journalisation des Sessions**. L'objectif est de sauvegarder les gains de chaque session terminée pour permettre un suivi et des statistiques sur le long terme.
+Implémenter l'Historique et la Journalisation des Sessions (modèle `Session`, écran `HistoryScreen`, stockage persistant des sessions). Voir `PROJECT_REFERENCE.txt`.

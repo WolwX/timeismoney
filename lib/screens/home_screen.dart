@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:timeismoney/providers/timer_controller.dart';
 import 'package:timeismoney/screens/settings_screen.dart'; 
+import 'package:timeismoney/widgets/footer_bar.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -74,217 +75,218 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 800),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              // 1. Compteur d'Argent PRINCIPAL (GAIN NET) - En Jaune
-              const Text(
-                'Gains NETS Actuels :',
-                style: TextStyle(fontSize: 20, color: Colors.grey),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: FittedBox(
+      body: SingleChildScrollView( // Correction 1 : Permet le défilement vertical
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                // 1. Compteur d'Argent PRINCIPAL (GAIN NET) - En Jaune
+                const Text(
+                  'Gains NETS Actuels :',
+                  style: TextStyle(fontSize: 20, color: Colors.grey),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: FittedBox(
+                    child: Text(
+                      formatMoney(timerController, currentNetGains),
+                      style: TextStyle(
+                        fontSize: gainFontSize, 
+                        fontWeight: FontWeight.w900,
+                        color: Colors.yellowAccent, 
+                        shadows: [
+                          Shadow(
+                            blurRadius: 10.0,
+                            color: Colors.yellow.shade700,
+                            offset: const Offset(0, 0),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 10),
+
+                // 2. Compteur secondaire (GAIN BRUT) 
+                Text(
+                  'Brut : ${formatMoney(timerController, currentGrossGains)}',
+                  style: const TextStyle(fontSize: 22, color: Colors.green),
+                ),
+
+                // Affichage de la Source 
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
                   child: Text(
-                    formatMoney(timerController, currentNetGains),
-                    style: TextStyle(
-                      fontSize: gainFontSize, 
-                      fontWeight: FontWeight.w900,
-                      color: Colors.yellowAccent, // CHANGEMENT : Jaune pour le Net
-                      shadows: [
-                        Shadow(
-                          blurRadius: 10.0,
-                          color: Colors.yellow.shade700,
-                          offset: const Offset(0, 0),
+                    'Source : ${timerController.rateTitle}',
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
+                // 3. Compteurs (Temps et Taux)
+                Text(
+                  'Temps écoulé : ${formatDuration(timerController.elapsedDuration)}',
+                  style: const TextStyle(fontSize: 24),
+                ),
+                
+                const SizedBox(height: 10),
+
+                // Taux Horaire BRUT
+                Text(
+                  'Taux BRUT : ${formatMoney(timerController, timerController.hourlyRate)} / heure',
+                  style: const TextStyle(fontSize: 18, color: Colors.grey),
+                ),
+                
+                // Taux Horaire NET (Estimation)
+                Text(
+                  'Taux NET : ${formatMoney(timerController, hourlyNet)} / heure',
+                  style: const TextStyle(fontSize: 16, color: Colors.greenAccent),
+                ),
+                
+                const SizedBox(height: 40),
+                
+                // 4. Section Estimations de Salaire (Brut et Net)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white10,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Estimations Annuelles (Base 35h/sem.)',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white70),
+                      ),
+                      const Divider(height: 15, color: Colors.white30),
+                      
+                      // Ligne Mensuel NET
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Mensuel Net estimé :', style: TextStyle(fontSize: 16)),
+                          Text(
+                            formatMoney(timerController, monthlyNet),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.greenAccent),
+                          ),
+                        ],
+                      ),
+                      // Ligne Mensuel BRUT
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Mensuel Brut :', style: TextStyle(fontSize: 16)),
+                          Text(
+                            formatMoney(timerController, monthlyGross),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 20, color: Colors.white30),
+
+                      // Ligne Annuel NET
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Annuel Net estimé :', style: TextStyle(fontSize: 16)),
+                          Text(
+                            formatMoney(timerController, yearlyNet),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.greenAccent),
+                          ),
+                        ],
+                      ),
+                      // Ligne Annuel BRUT
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Annuel Brut :', style: TextStyle(fontSize: 16)),
+                          Text(
+                            formatMoney(timerController, yearlyGross),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10.0),
+                        child: Text(
+                          '*Le Net est estimé à $netPercentage% du Brut (-$chargesPercentage% de charges). Ce taux est réglable dans les Réglages.',
+                          style: const TextStyle(fontSize: 12, color: Colors.redAccent),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 40),
+                
+                // 5. Boutons de Contrôle (START/STOP et RESET)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  // Suppression de la Row englobante pour centrer correctement le ConstrainedBox et éliminer le bug de défilement horizontal.
+                  child: ConstrainedBox( // CORRECTION 3 : Élimination du bug de défilement horizontal
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: Row( // On garde la Row interne pour aligner les boutons
+                      children: [
+                        // Bouton START/STOP : Texte et Icône
+                        Expanded(
+                          flex: 2, // Correction 2 : Ratio de taille des boutons (2:1)
+                          child: ElevatedButton.icon(
+                            icon: Icon(
+                              timerController.isRunning ? Icons.pause : Icons.play_arrow,
+                              size: 28,
+                            ),
+                            label: Text(buttonText),
+                            onPressed: () => buttonAction(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: timerController.isRunning ? Colors.red : Colors.green,
+                              padding: const EdgeInsets.symmetric(vertical: 25),
+                              textStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                            ),
+                          ),
+                        ),
+                        
+                        const SizedBox(width: 15),
+                        
+                        // Bouton RESET
+                        Expanded(
+                          flex: 1, 
+                          child: OutlinedButton(
+                            onPressed: timerController.isRunning 
+                              ? null 
+                              : timerController.resetSession, 
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 25),
+                              side: BorderSide(
+                                color: timerController.isRunning ? Colors.grey.shade700 : Colors.grey, 
+                                width: 2,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                            ),
+                            child: const Icon(Icons.refresh, size: 28), 
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
-              ),
-              
-              const SizedBox(height: 10),
-
-              // 2. Compteur secondaire (GAIN BRUT) - Plus grand et en Vert
-              Text(
-                'Brut : ${formatMoney(timerController, currentGrossGains)}',
-                style: const TextStyle(fontSize: 22, color: Colors.green), // CHANGEMENT : Plus grand et Vert
-              ),
-
-              // CHANGEMENT : Affichage de la Source déplacé ici
-              Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: Text(
-                  'Source : ${timerController.rateTitle}',
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                ),
-              ),
-              // FIN CHANGEMENT DE BLOC
-
-              const SizedBox(height: 40),
-
-              // 3. Compteurs (Temps et Taux)
-              Text(
-                'Temps écoulé : ${formatDuration(timerController.elapsedDuration)}',
-                style: const TextStyle(fontSize: 24),
-              ),
-              
-              const SizedBox(height: 10),
-
-              // Taux Horaire BRUT
-              Text(
-                'Taux BRUT : ${formatMoney(timerController, timerController.hourlyRate)} / heure',
-                style: const TextStyle(fontSize: 18, color: Colors.grey),
-              ),
-              
-              // Taux Horaire NET (Estimation)
-              Text(
-                'Taux NET : ${formatMoney(timerController, hourlyNet)} / heure',
-                style: const TextStyle(fontSize: 16, color: Colors.greenAccent),
-              ),
-              
-              const SizedBox(height: 40),
-              
-              // 4. Section Estimations de Salaire (Brut et Net)
-              Container(
-                padding: const EdgeInsets.all(16),
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                decoration: BoxDecoration(
-                  color: Colors.white10,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Estimations Annuelles (Base 35h/sem.)',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white70),
-                    ),
-                    const Divider(height: 15, color: Colors.white30),
-                    
-                    // Ligne Mensuel NET
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Mensuel Net estimé :', style: TextStyle(fontSize: 16)),
-                        Text(
-                          formatMoney(timerController, monthlyNet),
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.greenAccent),
-                        ),
-                      ],
-                    ),
-                    // Ligne Mensuel BRUT
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Mensuel Brut :', style: TextStyle(fontSize: 16)),
-                        Text(
-                          formatMoney(timerController, monthlyGross),
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 20, color: Colors.white30),
-
-                    // Ligne Annuel NET
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Annuel Net estimé :', style: TextStyle(fontSize: 16)),
-                        Text(
-                          formatMoney(timerController, yearlyNet),
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.greenAccent),
-                        ),
-                      ],
-                    ),
-                    // Ligne Annuel BRUT
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Annuel Brut :', style: TextStyle(fontSize: 16)),
-                        Text(
-                          formatMoney(timerController, yearlyGross),
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    
-                    Padding(
-                      padding: const EdgeInsets.only(top: 10.0),
-                      child: Text(
-                        '*Le Net est estimé à ${netPercentage}% du Brut (-${chargesPercentage}% de charges). Ce taux est réglable dans les Réglages.',
-                        style: const TextStyle(fontSize: 12, color: Colors.redAccent),
-                      ),
-                    )
-                  ],
-                ),
-              ),
-              
-              const SizedBox(height: 40),
-              
-              // 5. Boutons de Contrôle (START/STOP et RESET)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 400),
-                      child: Row(
-                        children: [
-                          // Bouton START/STOP : Texte et Icône
-                          Expanded(
-                            flex: 3, 
-                            child: ElevatedButton.icon(
-                              icon: Icon(
-                                timerController.isRunning ? Icons.pause : Icons.play_arrow,
-                                size: 28,
-                              ),
-                              label: Text(buttonText),
-                              onPressed: () => buttonAction(),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: timerController.isRunning ? Colors.red : Colors.green,
-                                padding: const EdgeInsets.symmetric(vertical: 25),
-                                textStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                              ),
-                            ),
-                          ),
-                          
-                          const SizedBox(width: 15),
-                          
-                          // Bouton RESET
-                          Expanded(
-                            flex: 1, 
-                            child: OutlinedButton(
-                              onPressed: timerController.isRunning 
-                                ? null 
-                                : timerController.resetSession, 
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 25),
-                                side: BorderSide(
-                                  color: timerController.isRunning ? Colors.grey.shade700 : Colors.grey, 
-                                  width: 2,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                              ),
-                              child: const Icon(Icons.refresh, size: 28), 
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+                
+                const SizedBox(height: 30), // Correction 4 : Ajout d'une marge inférieure
+                // Footer (dark mode) appended to the scrollable content so it moves with scrolling
+                const FooterBar(creatorName: 'XR'),
+              ],
+            ),
           ),
         ),
       ),

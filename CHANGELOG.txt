@@ -1,25 +1,38 @@
 CHANGELOG
 ================================================================================
 
-Date : [Date du jour : 01/10/2025]
+Date : 01/10/2025
 
 --------------------------------------------------------------------------------
-V. 1.1.0 - Refonte des Taux & Affichage Net/Brut
+V. 1.1.0 - Refonte des Taux, Tests & Améliorations UI
 --------------------------------------------------------------------------------
 
 NOUVELLES FONCTIONNALITÉS MAJEURES
 
 * **Taux Net Réglable par l'Utilisateur :**
-    * Ajout d'un paramètre persistant permettant à l'utilisateur de définir le pourcentage du taux BRUT qu'il reçoit en NET (par défaut 77% pour la France). Ce taux est réglable dans l'écran des Réglages.
+    * Ajout d'un paramètre persistant permettant à l'utilisateur de définir le pourcentage du taux BRUT qu'il reçoit en NET (par défaut 77% pour la France).
     * Tous les calculs d'estimation (heure, mensuel, annuel) utilisent désormais ce taux pour fournir des chiffres NETS personnalisés.
 
-AMÉLIORATIONS UX/UI
+AMÉLIORATIONS UX/UI & TECHNIQUES
 
 * **Affichage Prioritaire du Gain NET :**
-    * Le **compteur principal** affiche désormais le gain **NET** (grosse police, couleur Jaune/Or).
-    * Le gain **BRUT** est affiché comme référence secondaire (police légèrement plus grande que la normale, couleur Verte).
-* **Visibilité de la Source du Taux :**
-    * La source du taux est affichée clairement sous le compteur de gains principal pour une meilleure traçabilité.
+    * Le compteur principal affiche désormais le gain NET (grosse police, couleur Jaune/Or).
+    * Le gain BRUT est affiché comme référence secondaire.
+
+* **Sablier d'Introduction Fiable :**
+    * Un `AnimatedHourglass` en `CustomPainter` fournit un sablier animé local comme fallback, évitant les blocages réseau ou SVG lors du splash.
+
+* **Fond Animé de Symboles Monétaires :**
+    * Particules textuelles (symboles de devise) implémentées et optimisées (compte réduit, fréquence d'update plus basse) pour limiter l'impact CPU, surtout sur web.
+
+* **Séparation de la Persistance :**
+    * Introduction d'une interface `IStorageService` et d'une implémentation `SharedPreferences`.
+    * Tests unitaires ajoutés avec un `FakeStorage` pour la logique du `TimerController`.
+
+* **Footer & Versioning :**
+    * `FooterBar` ajouté pour afficher les crédits et la version du build.
+    * Lecture de la version priorise `pubspec.yaml` (si empaqueté dans les assets) puis `PackageInfo`.
+    * Script `scripts/update_version.ps1` ajouté pour incrémenter le build number depuis le nombre de commits Git et relancer `flutter pub get`.
 
 --------------------------------------------------------------------------------
 V. 1.0.0 - Initialisation du Projet : Compteur Fonctionnel

@@ -6,13 +6,24 @@ CONTEXTE TECHNIQUE :
     - Framework : Flutter
     - Gestion d'état : Provider
     - Persistance locale : shared_preferences (Utilisé pour sauvegarder le taux, la devise, le titre du taux et le taux Net/Brut).
+2. PROCHAINE ÉTAPE (PRIORITÉ ÉLEVÉE)
+================================================================================
+```plaintext
+PROJECT REFERENCE FILE
+================================================================================
+DERNIÈRE MISE À JOUR : 01/10/2025
+BUT DU PROJET : Application Flutter de chronométrage financier ("Time Is Money") affichant les gains en temps réel basés sur un taux horaire paramétrable.
+CONTEXTE TECHNIQUE : 
+    - Framework : Flutter
+    - Gestion d'état : Provider
+    - Persistance locale : shared_preferences (utilisation via une abstraction `IStorageService`)
 
 --------------------------------------------------------------------------------
 1. ÉTAT ACTUEL DE L'APPLICATION (V. 1.1.0)
 --------------------------------------------------------------------------------
 
 FONCTIONNALITÉS COMPLÈTES :
-1.  **Chronomètre et Calcul en Temps Réel :** Un Timer incrémente le temps et les gains ($ Brut).
+1.  **Chronomètre et Calcul en Temps Réel :** Un Timer incrémente le temps et les gains (Brut → Net calculé via facteur configurable).
 2.  **Personnalisation du Taux :** L'utilisateur peut définir un taux horaire et une devise.
 3.  **Préréglages de Taux :** Une liste de taux (presets) est disponible dans l'écran des réglages (via `lib/models/preset_rates.dart`).
 4.  **Calcul Brut/Net Paramétrable :**
@@ -20,18 +31,22 @@ FONCTIONNALITÉS COMPLÈTES :
     * Le Net est calculé en multipliant le Brut par (TauxNet / 100).
 5.  **Affichage des Gains :**
     * Le **gain NET** est le compteur principal (grosse police, Jaune/Or).
-    * Le gain **BRUT** est affiché comme référence secondaire (Vert, police de taille 22).
-6.  **Estimations Annuelles :** Les estimations Mensuelles et Annuelles (Brut et Net) sont affichées en bas de l'écran.
+    * Le gain **BRUT** est affiché comme référence secondaire (Vert).
+6.  **Estimation Annuelle :** Les estimations Mensuelles et Annuelles (Brut et Net) sont affichées.
 
 FICHIERS CLES ET RÔLES :
-* `lib/providers/timer_controller.dart`: Gère la logique du chronomètre, l'état (isRunning, elapsedDuration), le taux, la devise, le titre du taux, et le taux NET/BRUT. Assure la persistance via `shared_preferences`.
-* `lib/screens/home_screen.dart`: Affiche le chronomètre, les gains (Net principal, Brut secondaire), les taux et les estimations annuelles.
-* `lib/screens/settings_screen.dart`: Permet de modifier le taux horaire, la devise, de choisir un préréglage, et de régler le pourcentage de conversion NET/BRUT.
-* `lib/models/preset_rates.dart`: Contient la structure et la liste statique des préréglages de taux.
+* `lib/providers/timer_controller.dart`: Gère la logique du chronomètre et la persistance via `IStorageService`.
+* `lib/services/storage_service.dart`: Interface `IStorageService` et implémentation `SharedPreferences`.
+* `lib/widgets/animated_hourglass.dart`: Sablier peint (`CustomPainter`) utilisé sur l'écran de démarrage.
+* `lib/widgets/falling_currency.dart`: Fond animé de symboles monétaires (particules texte).
+* `lib/widgets/footer_bar.dart`: Barre de footer affichant les crédits et la version du build.
+* `lib/screens/splash_screen.dart`: Splash screen mettant en scène le sablier et (optionnellement) le fond de particules.
+* `test/`: Tests unitaires pour `TimerController` (utilisant un `FakeStorage`).
 
 CHOIX D'IMPLEMENTATION NOTABLES :
-* Le calcul des gains en temps réel est basé sur le taux Brut, puis le Net est dérivé via le facteur de conversion.
-* Le reset du timer remet le temps et les gains à zéro.
+* Persistance isolée derrière `IStorageService` pour faciliter les tests et remplacer l'implémentation sous-jacente.
+* Le splash utilise un `CustomPainter` pour garantir un rendu local et éviter les erreurs de chargement externes.
+* Les particules ont été optimisées (moins d'instances, fréquence d'update plus basse) pour réduire la charge CPU, en particulier sur web.
 
 --------------------------------------------------------------------------------
 2. PROCHAINE ÉTAPE (PRIORITÉ ÉLEVÉE)
@@ -41,8 +56,16 @@ CHOIX D'IMPLEMENTATION NOTABLES :
 
 **DÉTAILS ATTENDUS :**
 * **Modèle de Session :** Créer un modèle `Session` (Date, Durée, Taux Horaire, Gain Brut Final, Gain Net Final).
-* **Sauvegarde :** Enregistrer les sessions terminées de manière persistante (probablement avec `shared_preferences` en stockant une liste sérialisée en JSON).
-* **Interface :** Créer un nouvel écran (`HistoryScreen`) pour lister toutes les sessions passées.
-* **Déclenchement :** L'enregistrement d'une session doit se faire au moment du RESET ou d'une nouvelle session si le temps écoulé > 0.
+* **Sauvegarde :** Enregistrer les sessions terminées de manière persistante (par ex. via `IStorageService` stockant une liste JSON).
+* **Interface :** Créer un écran `HistoryScreen` pour afficher les sessions et permettre export (CSV/JSON).
+* **Déclenchement :** L'enregistrement d'une session doit se faire au moment du RESET ou lors de la fin d'une session (si durée > 0).
+
+--------------------------------------------------------------------------------
+3. NOTES OPÉRATIONNELLES / VERSIONING
+--------------------------------------------------------------------------------
+* La version affichée dans le `FooterBar` suit cette priorité : explicit param → `pubspec.yaml` asset → `PackageInfo`.
+* Pour empaqueter `pubspec.yaml` comme asset (méthode utilisée ici), exécutez `flutter pub get` puis rebuild afin que le fichier soit inclus dans le bundle d'assets.
+* Un script `scripts/update_version.ps1` est fourni pour incrémenter le build number à partir du nombre de commits Git et relancer `flutter pub get` automatiquement.
 
 ================================================================================
+```

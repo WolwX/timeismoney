@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Classic hourglass SVG: two glass bulbs, narrow neck, sand shapes and wooden frame -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="sable" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#FFC107"/>
+    </linearGradient>
+    <linearGradient id="glassGrad" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#F0FBFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#DFF7FF" stop-opacity="0.6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Top plank -->
+  <rect x="90" y="28" width="332" height="34" rx="8" fill="#6D4C41"/>
+
+  <!-- Bottom plank -->
+  <rect x="90" y="450" width="332" height="34" rx="8" fill="#6D4C41"/>
+
+  <!-- Left frame post -->
+  <rect x="120" y="70" width="24" height="372" rx="6" fill="#5D4037"/>
+  <!-- Right frame post -->
+  <rect x="368" y="70" width="24" height="372" rx="6" fill="#5D4037"/>
+
+  <!-- Glass outline and bulbs -->
+  <g stroke="#90CAF9" stroke-width="4" fill="url(#glassGrad)">
+    <!-- top bulb -->
+    <path d="M160 110 C200 150 230 185 256 200 C282 185 312 150 352 110 C312 136 200 136 160 110 Z"/>
+    <!-- bottom bulb -->
+    <path d="M160 402 C200 362 230 327 256 312 C282 327 312 362 352 402 C312 376 200 376 160 402 Z"/>
+  </g>
+
+  <!-- Neck -->
+  <rect x="246" y="200" width="20" height="112" rx="4" fill="#ffffff" fill-opacity="0.5"/>
+
+  <!-- Sand top small pile -->
+  <g fill="url(#sable)">
+    <path d="M206 138 C230 154 282 154 306 138 C286 148 236 148 206 138 Z"/>
+  </g>
+
+  <!-- Falling grains (stylized) -->
+  <g fill="#FFB300">
+    <circle cx="256" cy="236" r="5"/>
+    <circle cx="256" cy="252" r="3"/>
+  </g>
+
+  <!-- Sand bottom pile -->
+  <g fill="#FFB300">
+    <path d="M200 362 C232 352 280 352 312 362 C286 354 236 354 200 362 Z"/>
+  </g>
+
+</svg>

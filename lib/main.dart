@@ -3,13 +3,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; 
 import 'package:timeismoney/providers/timer_controller.dart'; 
+import 'package:timeismoney/services/storage_service.dart';
 // Import du nouveau Splash Screen
 import 'package:timeismoney/screens/splash_screen.dart'; 
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final storage = StorageService();
+  final controller = TimerController(storage: storage);
+  await controller.init();
+
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => TimerController(), 
+    ChangeNotifierProvider<TimerController>.value(
+      value: controller,
       child: const TimeIsMoneyApp(),
     ),
   );
