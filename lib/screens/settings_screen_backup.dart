@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:timeismoney/providers/multi_timer_controller.dart';
+import 'package:timeismoney/providers/timer_controller.dart';
 import 'package:timeismoney/models/preset_rates.dart'; 
 import 'dart:async'; 
 
@@ -63,17 +63,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // --- Fonctions de Synchronisation ---
   
   // Recalcule tous les champs basés sur un nouveau taux horaire
-  void _syncFieldsFromNewHourlyRate(MultiTimerController controller, double newHourlyRate) {
+  void _syncFieldsFromNewHourlyRate(TimerController controller, double newHourlyRate) {
     // Annule tout debounce en cours
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
     if (newHourlyRate.isInfinite || newHourlyRate.isNaN) newHourlyRate = 0.0;
     
-    final double hoursPerMonth = controller.selectedTimer.hoursPerMonth; 
+    final double hoursPerMonth = controller.hoursPerMonth; 
 
     // 1. Calcul des nouvelles valeurs
     final double newMonthlyGross = newHourlyRate * hoursPerMonth;
-    final double newMonthlyNet = newMonthlyGross * controller.selectedTimer.netConversionFactor;
+    final double newMonthlyNet = newMonthlyGross * controller.netConversionFactor;
   final double newAnnualGross = newMonthlyGross * monthsPerYear;
   final double newAnnualNet = newMonthlyNet * monthsPerYear;
 
@@ -115,8 +115,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
 
     // 3. Mise à jour du Provider (pour la persistance et le HomeScreen)
-    // Utiliser une méthode qui ne réinitialise pas le rateTitle
-    controller.updateHourlyRateOnly(newHourlyRate);
+    controller.setHourlyRate(newHourlyRate);
   }
 
   // Utilitaire pour maintenir le curseur à la fin du texte
@@ -132,26 +131,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    final controller = context.read<MultiTimerController>();
+    final controller = context.read<TimerController>();
     
-    final double hoursPerMonth = controller.selectedTimer.hoursPerMonth;
+    final double hoursPerMonth = controller.hoursPerMonth;
 
     // Calcul des valeurs initiales pour tous les champs
-    final double initialHourlyRate = controller.selectedTimer.hourlyRate;
+    final double initialHourlyRate = controller.hourlyRate;
     final double initialMonthlyGross = initialHourlyRate * hoursPerMonth;
-    final double initialMonthlyNet = initialMonthlyGross * controller.selectedTimer.netConversionFactor;
+    final double initialMonthlyNet = initialMonthlyGross * controller.netConversionFactor;
   final double initialAnnualGross = initialMonthlyGross * monthsPerYear;
   final double initialAnnualNet = initialMonthlyNet * monthsPerYear;
 
     // Initialisation de tous les contrôleurs
     _rateController = TextEditingController(text: initialHourlyRate.toStringAsFixed(2));
-    _currencyController = TextEditingController(text: controller.selectedTimer.currency);
-    _netRateController = TextEditingController(text: controller.selectedTimer.netRatePercentage.toStringAsFixed(0));
+    _currencyController = TextEditingController(text: controller.currency);
+    _netRateController = TextEditingController(text: controller.netRatePercentage.toStringAsFixed(0));
     _monthlyGrossController = TextEditingController(text: initialMonthlyGross.toStringAsFixed(2));
     _monthlyNetController = TextEditingController(text: initialMonthlyNet.toStringAsFixed(2));
     _annualGrossController = TextEditingController(text: initialAnnualGross.toStringAsFixed(2));
     _annualNetController = TextEditingController(text: initialAnnualNet.toStringAsFixed(2));
-    _weeklyHoursController = TextEditingController(text: controller.selectedTimer.weeklyHours.toStringAsFixed(1));
+    _weeklyHoursController = TextEditingController(text: controller.weeklyHours.toStringAsFixed(1));
 
     // Initialisation des FocusNodes
     _rateFocus = FocusNode();
@@ -189,7 +188,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // --- Logique d'Application d'un Préréglage ---
 
   void _applyPreset(PresetRate preset) {
-    final controller = context.read<MultiTimerController>();
+    final controller = context.read<TimerController>();
     
     controller.setCurrency(preset.currency);
     _currencyController.text = preset.currency;
@@ -230,25 +229,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // --- Widget pour la section des paramètres en 2 colonnes ---
-  Widget _buildSettingsSection(MultiTimerController controller) {
+  Widget _buildSettingsSection(TimerController controller) {
     
-    // Couleur distinctive selon l'index du timer sélectionné
-    final Color timerColor = controller.selectedTimerIndex == 0 ? Colors.cyan : Colors.orange;
-    
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: timerColor,
-          width: 2,
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ExpansionTile(
-        title: Text('⚙️ Paramètres Taux et Conversions (${controller.selectedTimer.name})'), 
-        initiallyExpanded: true, 
-        childrenPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-        children: [
-          Column(
+    return ExpansionTile(
+      title: const Text('⚙️ Paramètres Taux et Conversions'), 
+      initiallyExpanded: true, 
+      childrenPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      children: [
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Ligne 1 : Taux Horaire (G) / Heures Hebdomadaires (D)
@@ -260,7 +248,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+[\.\,]?\d{0,2}'))],
                 decoration: InputDecoration(
                   labelText: 'Taux Horaire BRUT',
-                  suffixText: '${controller.selectedTimer.currency} / h',
+                  suffixText: '${controller.currency} / h',
                 ),
                 onChanged: (value) { 
                   _debounceRun(() {
@@ -285,7 +273,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     // Mise à jour de la valeur dans le contrôleur (même si le FocusNode est lié, 
                     // ce champ est un cas spécial où il force une synchro)
                     controller.setWeeklyHours(newHours.clamp(0.0, 168.0)); 
-                    _syncFieldsFromNewHourlyRate(controller, controller.selectedTimer.hourlyRate); 
+                    _syncFieldsFromNewHourlyRate(controller, controller.hourlyRate); 
                   });
                 },
               ),
@@ -300,12 +288,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+[\.\,]?\d{0,2}'))],
                 decoration: InputDecoration(
                   labelText: 'Mensuel BRUT',
-                  suffixText: '${controller.selectedTimer.currency} / mois',
+                  suffixText: '${controller.currency} / mois',
                 ),
                 onChanged: (value) { 
                   _debounceRun(() {
                     final newMonthlyGross = double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
-                    final newRate = controller.selectedTimer.hoursPerMonth > 0 ? newMonthlyGross / controller.selectedTimer.hoursPerMonth : 0.0; 
+                    final newRate = controller.hoursPerMonth > 0 ? newMonthlyGross / controller.hoursPerMonth : 0.0; 
                     controller.setRateTitle('Salaire Mensuel Brut');
                     _syncFieldsFromNewHourlyRate(controller, newRate);
                   });
@@ -318,14 +306,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+[\.\,]?\d{0,2}'))],
                 decoration: InputDecoration(
                   labelText: 'Mensuel NET',
-                  suffixText: '${controller.selectedTimer.currency} / mois',
+                  suffixText: '${controller.currency} / mois',
                 ),
                 onChanged: (value) { 
                   _debounceRun(() {
                     final newMonthlyNet = double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
-                    final netFactor = controller.selectedTimer.netConversionFactor;
+                    final netFactor = controller.netConversionFactor;
                     double newMonthlyGross = (netFactor > 0) ? newMonthlyNet / netFactor : 0.0;
-                    final newRate = controller.selectedTimer.hoursPerMonth > 0 ? newMonthlyGross / controller.selectedTimer.hoursPerMonth : 0.0; 
+                    final newRate = controller.hoursPerMonth > 0 ? newMonthlyGross / controller.hoursPerMonth : 0.0; 
                     controller.setRateTitle('Salaire Mensuel Net');
                     _syncFieldsFromNewHourlyRate(controller, newRate);
                   });
@@ -342,13 +330,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+[\.\,]?\d{0,2}'))],
                 decoration: InputDecoration(
                   labelText: 'Annuel BRUT',
-                  suffixText: '${controller.selectedTimer.currency} / an',
+                  suffixText: '${controller.currency} / an',
                 ),
                 onChanged: (value) { 
                   _debounceRun(() {
                     final newAnnualGross = double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
                     final newMonthlyGross = newAnnualGross / monthsPerYear;
-                    final newRate = controller.selectedTimer.hoursPerMonth > 0 ? newMonthlyGross / controller.selectedTimer.hoursPerMonth : 0.0; 
+                    final newRate = controller.hoursPerMonth > 0 ? newMonthlyGross / controller.hoursPerMonth : 0.0; 
                     controller.setRateTitle('Salaire Annuel Brut');
                     _syncFieldsFromNewHourlyRate(controller, newRate);
                   });
@@ -361,15 +349,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+[\.\,]?\d{0,2}'))],
                 decoration: InputDecoration(
                   labelText: 'Annuel NET',
-                  suffixText: '${controller.selectedTimer.currency} / an',
+                  suffixText: '${controller.currency} / an',
                 ),
                 onChanged: (value) { 
                   _debounceRun(() {
                     final newAnnualNet = double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
                     final newMonthlyNet = newAnnualNet / monthsPerYear;
-                    final netFactor = controller.selectedTimer.netConversionFactor;
+                    final netFactor = controller.netConversionFactor;
                     double newMonthlyGross = (netFactor > 0) ? newMonthlyNet / netFactor : 0.0;
-                    final newRate = controller.selectedTimer.hoursPerMonth > 0 ? newMonthlyGross / controller.selectedTimer.hoursPerMonth : 0.0; 
+                    final newRate = controller.hoursPerMonth > 0 ? newMonthlyGross / controller.hoursPerMonth : 0.0; 
                     controller.setRateTitle('Salaire Annuel Net');
                     _syncFieldsFromNewHourlyRate(controller, newRate);
                   });
@@ -404,7 +392,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (newPercentage < 0 || newPercentage > 100) return;
 
                   controller.setNetRatePercentage(newPercentage);
-                  final currentHourlyRate = controller.selectedTimer.hourlyRate; 
+                  final currentHourlyRate = controller.hourlyRate; 
                   // Resynchronise tous les champs basés sur le nouveau facteur Net/Brut
                   _syncFieldsFromNewHourlyRate(controller, currentHourlyRate); 
 
@@ -416,11 +404,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 10),
         Text(
-          'Base mensuelle: ${controller.selectedTimer.hoursPerMonth.toStringAsFixed(2)} heures/mois (selon vos ${controller.selectedTimer.weeklyHours.toStringAsFixed(1)}h/semaine).',
+          'Base mensuelle: ${controller.hoursPerMonth.toStringAsFixed(2)} heures/mois (selon vos ${controller.weeklyHours.toStringAsFixed(1)}h/semaine).',
           style: const TextStyle(fontStyle: FontStyle.italic, color: Colors.white70, fontSize: 12),
         ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -428,7 +415,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildPresetsSection(Map<String, List<PresetRate>> groupedPresets) {
     final categories = groupedPresets.keys.toList();
-    final controller = context.read<MultiTimerController>();
+    final controller = context.read<TimerController>();
 
     return ExpansionTile(
       title: const Text('🚀 Préréglages Rapides'), 
@@ -466,11 +453,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // Affichage des préréglages de la catégorie sélectionnée (DÉTAILLÉ)
         if (_selectedCategory != null) 
           ...groupedPresets[_selectedCategory]!.map((preset) {
-            final double hoursPerMonth = controller.selectedTimer.hoursPerMonth;
+            final double hoursPerMonth = controller.hoursPerMonth;
             
             // Calculs COMPLETS pour l'affichage détaillé
             final double monthlyGross = preset.rate * hoursPerMonth;
-            final double monthlyNet = monthlyGross * controller.selectedTimer.netConversionFactor; 
+            final double monthlyNet = monthlyGross * controller.netConversionFactor; 
             final double annualGross = monthlyGross * monthsPerYear;
             final double annualNet = monthlyNet * monthsPerYear;
             
@@ -545,181 +532,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
 
-  // --- Widget pour la section de gestion des timers ---
-  Widget _buildTimerManagementSection(MultiTimerController controller) {
-    return ExpansionTile(
-      title: const Text('⏱️ Gestion des Timers'),
-      initiallyExpanded: true,
-      childrenPadding: const EdgeInsets.all(12),
-      children: [
-        // Liste des timers
-        ...List.generate(controller.timers.length, (index) {
-          final timer = controller.timers[index];
-          final isSelected = controller.selectedTimerIndex == index;
-          
-          // Couleur distinctive selon l'index du timer
-          final Color timerColor = index == 0 ? Colors.cyan : Colors.orange;
-          
-          return Card(
-            color: isSelected ? Colors.teal.shade900 : Colors.grey.shade800,
-            margin: const EdgeInsets.only(bottom: 8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-              side: BorderSide(
-                color: timerColor,
-                width: 3,
-              ),
-            ),
-            child: ListTile(
-              leading: Icon(
-                timer.isActive ? Icons.timer : Icons.timer_off,
-                color: timer.isActive ? Colors.green : Colors.grey,
-              ),
-              title: Text(
-                timer.rateTitle,
-                style: TextStyle(
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: Colors.white,
-                ),
-              ),
-              subtitle: Text(
-                '${timer.currency} ${timer.hourlyRate.toStringAsFixed(2)}/h',
-                style: const TextStyle(color: Colors.white70),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Toggle actif/inactif
-                  Switch(
-                    value: timer.isActive,
-                    onChanged: (value) {
-                      controller.toggleTimerActive(index);
-                    },
-                    activeColor: Colors.green,
-                  ),
-                  // Bouton supprimer (seulement si plus d'un timer)
-                  if (controller.timers.length > 1)
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        _showDeleteConfirmation(context, controller, index);
-                      },
-                    ),
-                ],
-              ),
-              onTap: () {
-                controller.selectTimer(index);
-              },
-            ),
-          );
-        }),
-        
-        const SizedBox(height: 12),
-        
-        // Bouton ajouter un timer (max 2 timers)
-        if (controller.timers.length < 2)
-          ElevatedButton.icon(
-            onPressed: () {
-              _showAddTimerDialog(context, controller);
-            },
-            icon: const Icon(Icons.add),
-            label: const Text('Ajouter un Timer'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(double.infinity, 48),
-            ),
-          )
-        else
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.orange.withAlpha((0.2 * 255).round()),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.info_outline, color: Colors.orange),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Maximum 2 timers atteint',
-                    style: TextStyle(color: Colors.orange),
-                  ),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-
-  // Dialogue pour ajouter un nouveau timer
-  void _showAddTimerDialog(BuildContext context, MultiTimerController controller) {
-    final nameController = TextEditingController(text: 'Timer ${controller.timers.length + 1}');
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Ajouter un Timer'),
-        content: TextField(
-          controller: nameController,
-          decoration: const InputDecoration(
-            labelText: 'Nom du timer',
-            hintText: 'Ex: Projet A, Client B...',
-          ),
-          maxLength: 20,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              if (name.isNotEmpty) {
-                controller.addTimer(name);
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Ajouter'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Dialogue de confirmation de suppression
-  void _showDeleteConfirmation(BuildContext context, MultiTimerController controller, int index) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Supprimer le timer ?'),
-        content: Text('Voulez-vous vraiment supprimer "${controller.timers[index].name}" ?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              controller.removeTimer(index);
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Supprimer'),
-          ),
-        ],
-      ),
-    );
-  }
-
   // Widget Principal
   @override
   Widget build(BuildContext context) {
-    final controller = context.watch<MultiTimerController>();
+    final controller = context.watch<TimerController>();
 
     final groupedPresets = _groupPresets(presetRates); 
 
@@ -732,11 +548,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // 0. SECTION GESTION DES TIMERS
-            _buildTimerManagementSection(controller),
-            
-            const SizedBox(height: 30),
-            
             // 1. SECTION PARAMÈTRES (2 colonnes garanties)
             _buildSettingsSection(controller),
             

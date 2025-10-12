@@ -37,6 +37,7 @@ class _FooterBarState extends State<FooterBar> {
       setState(() => _versionLabel = widget.version);
       return;
     }
+    
     // Priority 2: try to read pubspec.yaml from assets (must be declared in pubspec.yaml)
     try {
       final rawPubspec = await rootBundle.loadString('pubspec.yaml');
@@ -46,58 +47,35 @@ class _FooterBarState extends State<FooterBar> {
         final parts = versionLine.split(':');
         if (parts.length > 1) {
           final ver = parts.sublist(1).join(':').trim();
-          // ver could be like '1.1.3+45' -> parse major.minor
-          final core = ver.split('+')[0];
-              final p = core.split('.');
-              final major = p.isNotEmpty ? p[0] : '0';
-              final minor = p.length > 1 ? p[1] : '0';
-              final build = ver.contains('+') ? ver.split('+')[1] : null;
-          final now = DateTime.now();
-          final dd = now.day.toString().padLeft(2, '0');
-          final mm = now.month.toString().padLeft(2, '0');
-          final yy = (now.year % 100).toString().padLeft(2, '0');
-              setState(() {
-                if (build != null && build.isNotEmpty && build != '$dd$mm$yy') {
-                  _versionLabel = 'v$major.$minor.$dd$mm$yy+$build';
-                } else {
-                  _versionLabel = 'v$major.$minor.$dd$mm$yy';
-                }
-              });
+          // ver is like '1.2.0+121025' -> format as 'v1.2.121025'
+          final fullVersion = ver.replaceAll('+', '.');
+          setState(() {
+            _versionLabel = 'v$fullVersion';
+          });
           return;
         }
       }
     } catch (_) {
       // fall through to package_info fallback
     }
+    
+    // Priority 3: use PackageInfo.fromPlatform()
     try {
       final info = await PackageInfo.fromPlatform();
-      final raw = info.version.trim();
-      // build date in French format dd MM yy
-      final now = DateTime.now();
-      final dd = now.day.toString().padLeft(2, '0');
-      final mm = now.month.toString().padLeft(2, '0');
-      final yy = (now.year % 100).toString().padLeft(2, '0');
-      if (raw.isNotEmpty) {
-        // parse major.minor and build from package version
-        final core = raw.split('+')[0];
-        final parts = core.split('.');
-        final major = parts.isNotEmpty ? parts[0] : '0';
-        final minor = parts.length > 1 ? parts[1] : '0';
-        final build = info.buildNumber.isNotEmpty ? info.buildNumber : null;
-        if (build != null && build.isNotEmpty && build != '$dd$mm$yy') {
-          setState(() => _versionLabel = 'v$major.$minor.$dd$mm$yy+$build');
+      final version = info.version.trim();
+      final buildNumber = info.buildNumber.trim();
+      
+      if (version.isNotEmpty) {
+        if (buildNumber.isNotEmpty && buildNumber != '0') {
+          setState(() => _versionLabel = 'v$version.$buildNumber');
         } else {
-          setState(() => _versionLabel = 'v$major.$minor.$dd$mm$yy');
+          setState(() => _versionLabel = 'v$version');
         }
       } else {
-        setState(() => _versionLabel = 'v?.?.$dd$mm$yy');
+        setState(() => _versionLabel = 'v?.?.?');
       }
     } catch (_) {
-      final now = DateTime.now();
-      final dd = now.day.toString().padLeft(2, '0');
-      final mm = now.month.toString().padLeft(2, '0');
-      final yy = (now.year % 100).toString().padLeft(2, '0');
-  setState(() => _versionLabel = 'v?.?$dd$mm$yy');
+      setState(() => _versionLabel = 'v?.?.?');
     }
   }
 

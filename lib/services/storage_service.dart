@@ -29,6 +29,10 @@ abstract class IStorageService {
 
   Future<double?> getWeeklyHours();
   Future<void> setWeeklyHours(double hours);
+
+  // Generic string storage for complex data (JSON)
+  Future<String?> getString(String key);
+  Future<void> setString(String key, String value);
 }
 
 /// Implémentation qui utilise SharedPreferences
@@ -142,5 +146,17 @@ class StorageService implements IStorageService {
   Future<void> setWeeklyHours(double hours) async {
     final prefs = await _prefs;
     await prefs.setDouble(_kWeeklyHoursKey, hours);
+  }
+
+  @override
+  Future<String?> getString(String key) async {
+    final prefs = await _prefs;
+    return prefs.getString(key);
+  }
+
+  @override
+  Future<void> setString(String key, String value) async {
+    final prefs = await _prefs;
+    await prefs.setString(key, value);
   }
 }

@@ -221,7 +221,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   bottom: 0,
                   child: FooterBar(
                     creatorName: 'XR',
-                    version: 'v1.1',
+                    version: 'v1.2',
                     minimal: true,
                     onCreatorTap: () {
                       // optional: open about page later

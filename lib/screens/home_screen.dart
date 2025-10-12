@@ -1,61 +1,19 @@
-// lib/screens/home_screen.dart
+﻿// lib/screens/home_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:timeismoney/providers/timer_controller.dart';
+import 'package:timeismoney/providers/multi_timer_controller.dart';
 import 'package:timeismoney/screens/settings_screen.dart'; 
 import 'package:timeismoney/widgets/footer_bar.dart';
+import 'package:timeismoney/widgets/timer_display.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  // Fonction utilitaire pour formater la durée en HH:MM:SS
-  String formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
-  }
-
-  // Fonction utilitaire pour formater l'argent avec 2 décimales
-  String formatMoney(TimerController controller, double amount) {
-    return '${controller.currency} ${amount.toStringAsFixed(2)}';
-  }
-
   @override
   Widget build(BuildContext context) {
-    final timerController = context.watch<TimerController>();
-    
-    // --- Responsive : Calcul de la taille de police dynamique ---
-    final screenWidth = MediaQuery.of(context).size.width;
-    final double gainFontSize = (screenWidth * 0.25).clamp(55, 120).toDouble();
-
-    final String buttonText = timerController.isRunning ? 'STOP' : 'START';
-    final Function buttonAction = timerController.isRunning
-        ? timerController.stopTimer
-        : timerController.startTimer;
-    
-    // --- CALCULS : Gains et Estimations ---
-    final double netConversionFactor = timerController.netConversionFactor; 
-    
-    // Gains Actuels
-    final double currentGrossGains = timerController.currentGains;
-    final double currentNetGains = currentGrossGains * netConversionFactor;
-    
-    // Estimations (Base 35h/sem.)
-    const double hoursPerMonth = 151.67; 
-    const double hoursPerYear = 1820;    
-    
-    final double monthlyGross = timerController.hourlyRate * hoursPerMonth;
-    final double yearlyGross = timerController.hourlyRate * hoursPerYear;
-    final double hourlyNet = timerController.hourlyRate * netConversionFactor;
-    final double monthlyNet = monthlyGross * netConversionFactor;
-    final double yearlyNet = yearlyGross * netConversionFactor;
-    
-    // Affichage des pourcentages pour la note
-    final String netPercentage = timerController.netRatePercentage.toStringAsFixed(0);
-    final String chargesPercentage = (100.0 - timerController.netRatePercentage).toStringAsFixed(0);
-
+    final controller = context.watch<MultiTimerController>();
+    final activeTimers = controller.activeTimers;
 
     return Scaffold(
       appBar: AppBar(
@@ -75,220 +33,160 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView( // Correction 1 : Permet le défilement vertical
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                // 1. Compteur d'Argent PRINCIPAL (GAIN NET) - En Jaune
-                const Text(
-                  'Gains NETS Actuels :',
-                  style: TextStyle(fontSize: 20, color: Colors.grey),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: FittedBox(
-                    child: Text(
-                      formatMoney(timerController, currentNetGains),
-                      style: TextStyle(
-                        fontSize: gainFontSize, 
-                        fontWeight: FontWeight.w900,
-                        color: Colors.yellowAccent, 
-                        shadows: [
-                          Shadow(
-                            blurRadius: 10.0,
-                            color: Colors.yellow.shade700,
-                            offset: const Offset(0, 0),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 10),
+      body: Column(
+        children: [
+          Expanded(
+            child: activeTimers.isEmpty
+                ? _buildNoTimersView()
+                : activeTimers.length == 1
+                    ? _buildSingleTimerView(controller, activeTimers[0], 0)
+                    : _buildMultiTimerView(controller, activeTimers),
+          ),
+          const FooterBar(creatorName: 'XR'),
+        ],
+      ),
+    );
+  }
 
-                // 2. Compteur secondaire (GAIN BRUT) 
-                Text(
-                  'Brut : ${formatMoney(timerController, currentGrossGains)}',
-                  style: const TextStyle(fontSize: 22, color: Colors.green),
-                ),
-
-                // Affichage de la Source 
-                Padding(
-                  padding: const EdgeInsets.only(top: 4.0),
-                  child: Text(
-                    'Source : ${timerController.rateTitle}',
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                // 3. Compteurs (Temps et Taux)
-                Text(
-                  'Temps écoulé : ${formatDuration(timerController.elapsedDuration)}',
-                  style: const TextStyle(fontSize: 24),
-                ),
-                
-                const SizedBox(height: 10),
-
-                // Taux Horaire BRUT
-                Text(
-                  'Taux BRUT : ${formatMoney(timerController, timerController.hourlyRate)} / heure',
-                  style: const TextStyle(fontSize: 18, color: Colors.grey),
-                ),
-                
-                // Taux Horaire NET (Estimation)
-                Text(
-                  'Taux NET : ${formatMoney(timerController, hourlyNet)} / heure',
-                  style: const TextStyle(fontSize: 16, color: Colors.greenAccent),
-                ),
-                
-                const SizedBox(height: 40),
-                
-                // 4. Section Estimations de Salaire (Brut et Net)
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white10,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Estimations Annuelles (Base 35h/sem.)',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white70),
-                      ),
-                      const Divider(height: 15, color: Colors.white30),
-                      
-                      // Ligne Mensuel NET
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Mensuel Net estimé :', style: TextStyle(fontSize: 16)),
-                          Text(
-                            formatMoney(timerController, monthlyNet),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.greenAccent),
-                          ),
-                        ],
-                      ),
-                      // Ligne Mensuel BRUT
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Mensuel Brut :', style: TextStyle(fontSize: 16)),
-                          Text(
-                            formatMoney(timerController, monthlyGross),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      const Divider(height: 20, color: Colors.white30),
-
-                      // Ligne Annuel NET
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Annuel Net estimé :', style: TextStyle(fontSize: 16)),
-                          Text(
-                            formatMoney(timerController, yearlyNet),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.greenAccent),
-                          ),
-                        ],
-                      ),
-                      // Ligne Annuel BRUT
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Annuel Brut :', style: TextStyle(fontSize: 16)),
-                          Text(
-                            formatMoney(timerController, yearlyGross),
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      
-                      Padding(
-                        padding: const EdgeInsets.only(top: 10.0),
-                        child: Text(
-                          '*Le Net est estimé à $netPercentage% du Brut (-$chargesPercentage% de charges). Ce taux est réglable dans les Réglages.',
-                          style: const TextStyle(fontSize: 12, color: Colors.redAccent),
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 40),
-                
-                // 5. Boutons de Contrôle (START/STOP et RESET)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  // Suppression de la Row englobante pour centrer correctement le ConstrainedBox et éliminer le bug de défilement horizontal.
-                  child: ConstrainedBox( // CORRECTION 3 : Élimination du bug de défilement horizontal
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    child: Row( // On garde la Row interne pour aligner les boutons
-                      children: [
-                        // Bouton START/STOP : Texte et Icône
-                        Expanded(
-                          flex: 2, // Correction 2 : Ratio de taille des boutons (2:1)
-                          child: ElevatedButton.icon(
-                            icon: Icon(
-                              timerController.isRunning ? Icons.pause : Icons.play_arrow,
-                              size: 28,
-                            ),
-                            label: Text(buttonText),
-                            onPressed: () => buttonAction(),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: timerController.isRunning ? Colors.red : Colors.green,
-                              padding: const EdgeInsets.symmetric(vertical: 25),
-                              textStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                            ),
-                          ),
-                        ),
-                        
-                        const SizedBox(width: 15),
-                        
-                        // Bouton RESET
-                        Expanded(
-                          flex: 1, 
-                          child: OutlinedButton(
-                            onPressed: timerController.isRunning 
-                              ? null 
-                              : timerController.resetSession, 
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 25),
-                              side: BorderSide(
-                                color: timerController.isRunning ? Colors.grey.shade700 : Colors.grey, 
-                                width: 2,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                            ),
-                            child: const Icon(Icons.refresh, size: 28), 
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 30), // Correction 4 : Ajout d'une marge inférieure
-                // Footer (dark mode) appended to the scrollable content so it moves with scrolling
-                const FooterBar(creatorName: 'XR'),
-              ],
+  Widget _buildNoTimersView() {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.timer_off, size: 80, color: Colors.grey),
+            SizedBox(height: 20),
+            Text(
+              'Aucun timer actif',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
+            SizedBox(height: 10),
+            Text(
+              'Activez un timer dans les réglages pour commencer',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSingleTimerView(MultiTimerController controller, timer, int index) {
+    return SingleChildScrollView(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: TimerDisplay(
+            timer: timer,
+            timerIndex: index,
+            onStart: () => controller.startTimer(index),
+            onStop: () => controller.stopTimer(index),
+            onReset: () => controller.resetTimer(index),
+            isCompact: false,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMultiTimerView(MultiTimerController controller, List activeTimers) {
+    return Builder(
+      builder: (context) => Column(
+        children: [
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: TimerDisplay(
+                    timer: activeTimers[0],
+                    timerIndex: controller.timers.indexOf(activeTimers[0]),
+                    onStart: () => controller.startTimer(controller.timers.indexOf(activeTimers[0])),
+                    onStop: () => controller.stopTimer(controller.timers.indexOf(activeTimers[0])),
+                    onReset: () => controller.resetTimer(controller.timers.indexOf(activeTimers[0])),
+                    isCompact: true,
+                  ),
+                ),
+              ),
+              Container(
+                width: 60,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  border: Border.symmetric(
+                    vertical: BorderSide(color: Colors.white.withOpacity(0.1), width: 1),
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Tooltip(
+                      message: 'Démarrer tous',
+                      child: IconButton(
+                        icon: const Icon(Icons.play_arrow, color: Colors.green),
+                        onPressed: () => controller.startAllTimers(),
+                        iconSize: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Tooltip(
+                      message: 'Arrêter tous',
+                      child: IconButton(
+                        icon: const Icon(Icons.pause, color: Colors.red),
+                        onPressed: () => controller.stopAllTimers(),
+                        iconSize: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Tooltip(
+                      message: 'Réinitialiser tous',
+                      child: IconButton(
+                        icon: const Icon(Icons.refresh, color: Colors.orange),
+                        onPressed: () => controller.resetAllTimers(),
+                        iconSize: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Divider(color: Colors.white24, thickness: 1),
+                    const SizedBox(height: 20),
+                    Tooltip(
+                      message: 'Synchroniser les timers',
+                      child: IconButton(
+                        icon: const Icon(Icons.sync, color: Colors.blue),
+                        onPressed: () {
+                          controller.synchronizeTimers();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Timers synchronisés !'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        iconSize: 32,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (activeTimers.length > 1)
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: TimerDisplay(
+                      timer: activeTimers[1],
+                      timerIndex: controller.timers.indexOf(activeTimers[1]),
+                      onStart: () => controller.startTimer(controller.timers.indexOf(activeTimers[1])),
+                      onStop: () => controller.stopTimer(controller.timers.indexOf(activeTimers[1])),
+                      onReset: () => controller.resetTimer(controller.timers.indexOf(activeTimers[1])),
+                      isCompact: true,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
       ),
     );
   }

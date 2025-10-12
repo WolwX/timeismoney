@@ -1,71 +1,249 @@
 PROJECT REFERENCE FILE
 ================================================================================
-DERNIÈRE MISE À JOUR : [Date du jour : 01/10/2025]
-BUT DU PROJET : Application Flutter de chronométrage financier ("Time Is Money") affichant les gains en temps réel basés sur un taux horaire paramétrable.
+DERNIÈRE MISE À JOUR : 12/10/2025
+BUT DU PROJET : Application Flutter de chronométrage financier ("Time Is Money") affichant les gains en temps réel basés sur un taux horaire paramétrable avec support multi-timer.
 CONTEXTE TECHNIQUE : 
     - Framework : Flutter
-    - Gestion d'état : Provider
-    - Persistance locale : shared_preferences (Utilisé pour sauvegarder le taux, la devise, le titre du taux et le taux Net/Brut).
-2. PROCHAINE ÉTAPE (PRIORITÉ ÉLEVÉE)
-================================================================================
-```plaintext
-PROJECT REFERENCE FILE
-================================================================================
-DERNIÈRE MISE À JOUR : 01/10/2025
-BUT DU PROJET : Application Flutter de chronométrage financier ("Time Is Money") affichant les gains en temps réel basés sur un taux horaire paramétrable.
-CONTEXTE TECHNIQUE : 
-    - Framework : Flutter
-    - Gestion d'état : Provider
+    - Gestion d'état : Provider (ChangeNotifier)
     - Persistance locale : shared_preferences (utilisation via une abstraction `IStorageService`)
+    - Architecture : MVVM avec models, controllers, widgets réutilisables
 
 --------------------------------------------------------------------------------
-1. ÉTAT ACTUEL DE L'APPLICATION (V. 1.1.0)
+1. ÉTAT ACTUEL DE L'APPLICATION (V. 1.2.0)
 --------------------------------------------------------------------------------
 
 FONCTIONNALITÉS COMPLÈTES :
-1.  **Chronomètre et Calcul en Temps Réel :** Un Timer incrémente le temps et les gains (Brut → Net calculé via facteur configurable).
-2.  **Personnalisation du Taux :** L'utilisateur peut définir un taux horaire et une devise.
-3.  **Préréglages de Taux :** Une liste de taux (presets) est disponible dans l'écran des réglages (via `lib/models/preset_rates.dart`).
-4.  **Calcul Brut/Net Paramétrable :**
-    * Un pourcentage de conversion NET/BRUT est stocké et réglable par l'utilisateur (par défaut 77% pour la France).
-    * Le Net est calculé en multipliant le Brut par (TauxNet / 100).
-5.  **Affichage des Gains :**
-    * Le **gain NET** est le compteur principal (grosse police, Jaune/Or).
-    * Le gain **BRUT** est affiché comme référence secondaire (Vert).
-6.  **Estimation Annuelle :** Les estimations Mensuelles et Annuelles (Brut et Net) sont affichées.
 
-FICHIERS CLES ET RÔLES :
-* `lib/providers/timer_controller.dart`: Gère la logique du chronomètre et la persistance via `IStorageService`.
-* `lib/services/storage_service.dart`: Interface `IStorageService` et implémentation `SharedPreferences`.
-* `lib/widgets/animated_hourglass.dart`: Sablier peint (`CustomPainter`) utilisé sur l'écran de démarrage.
-* `lib/widgets/falling_currency.dart`: Fond animé de symboles monétaires (particules texte).
-* `lib/widgets/footer_bar.dart`: Barre de footer affichant les crédits et la version du build.
-* `lib/screens/splash_screen.dart`: Splash screen mettant en scène le sablier et (optionnellement) le fond de particules.
-* `test/`: Tests unitaires pour `TimerController` (utilisant un `FakeStorage`).
+**SYSTÈME MULTI-TIMER (NOUVEAU EN V1.2.0) :**
+1.  **Gestion de 2 Timers Indépendants :** L'application permet de créer jusqu'à 2 chronomètres simultanés avec configurations différentes.
+2.  **Contrôles Individuels :** Chaque timer possède ses propres boutons Start/Stop/Reset.
+3.  **Synchronisation :** Zone centrale avec boutons pour démarrer/arrêter/réinitialiser tous les timers simultanément.
+4.  **Gestion des Timers :** Interface pour ajouter, supprimer et activer/désactiver les timers (max 2).
+5.  **Distinction Visuelle :** 
+    * Timer 1 : Bordure cyan (#00BCD4)
+    * Timer 2 : Bordure orange (#FF9800)
+    * Hauteurs fixes pour alignement parfait des colonnes
+6.  **Layout Adaptatif :**
+    * 0 timers actifs : Message de bienvenue
+    * 1 timer actif : Affichage plein écran (mode full)
+    * 2 timers actifs : 2 colonnes avec zone de contrôle centrale (mode compact)
 
-CHOIX D'IMPLEMENTATION NOTABLES :
-* Persistance isolée derrière `IStorageService` pour faciliter les tests et remplacer l'implémentation sous-jacente.
-* Le splash utilise un `CustomPainter` pour garantir un rendu local et éviter les erreurs de chargement externes.
-* Les particules ont été optimisées (moins d'instances, fréquence d'update plus basse) pour réduire la charge CPU, en particulier sur web.
+**FONCTIONNALITÉS HÉRITÉES :**
+7.  **Chronomètre et Calcul en Temps Réel :** Chaque Timer incrémente le temps et calcule les gains (Brut → Net via facteur configurable).
+8.  **Personnalisation du Taux :** Configuration indépendante du taux horaire et de la devise pour chaque timer.
+9.  **Préréglages de Taux :** Liste de presets disponibles (via `lib/models/preset_rates.dart`) avec affichage du nom du preset (ex: "Kylian Mbappé" au lieu de "Gains NETS").
+10. **Calcul Brut/Net Paramétrable :**
+    * Pourcentage de conversion NET/BRUT stocké et réglable par utilisateur (défaut 77% pour France).
+    * Net = Brut × (TauxNet / 100).
+11. **Affichage des Gains :**
+    * Gain NET : Compteur principal (grosse police, Jaune/Or).
+    * Gain BRUT : Référence secondaire (Vert).
+12. **Estimations :** Estimations Mensuelles et Annuelles (Brut et Net) affichées pour chaque timer.
+
+FICHIERS CLÉS ET RÔLES :
+
+**MODELS :**
+* `lib/models/single_timer.dart` (NOUVEAU) : Modèle encapsulant l'état d'un timer (id, name, isActive, isRunning, elapsedDuration, hourlyRate, currency, rateTitle, etc.) avec méthodes calculateGains(), recalculateTime(), toJson()/fromJson().
+* `lib/models/preset_rates.dart` : Définitions des presets de taux horaires (célébrités, professions).
+
+**CONTROLLERS :**
+* `lib/providers/multi_timer_controller.dart` (NOUVEAU) : Gère la collection de timers (List<SingleTimer>), contrôles individuels/globaux, synchronisation, persistance JSON.
+* `lib/providers/timer_controller.dart` (LEGACY) : Ancien controller pour référence historique, non utilisé en v1.2.0.
+
+**WIDGETS :**
+* `lib/widgets/timer_display.dart` (NOUVEAU) : Widget réutilisable affichant un timer avec bordures color-coded, hauteurs fixes, modes compact/full.
+* `lib/widgets/animated_hourglass.dart` : Sablier animé (CustomPainter) pour écran de démarrage.
+* `lib/widgets/falling_currency.dart` : Fond animé de symboles monétaires (particules).
+* `lib/widgets/footer_bar.dart` : Barre de footer affichant version (lit depuis pubspec.yaml, format v1.2.0.121025).
+
+**SCREENS :**
+* `lib/screens/home_screen.dart` (RÉÉCRIT) : Écran principal avec layout adaptatif (1 ou 2 colonnes), zone de contrôle centrale.
+* `lib/screens/settings_screen.dart` (MODIFIÉ) : Gestion des timers (add/remove/toggle), configuration par timer avec bordures color-coded.
+* `lib/screens/splash_screen.dart` (MODIFIÉ) : Version hardcodée mise à jour vers v1.2.
+
+**SERVICES :**
+* `lib/services/storage_service.dart` : Interface `IStorageService` et implémentation SharedPreferences.
+
+**TESTS :**
+* `test/timer_controller_test.dart` : Tests unitaires pour l'ancien TimerController (référence).
+
+CHOIX D'IMPLÉMENTATION NOTABLES :
+* **Architecture MVVM :** Séparation claire Models (SingleTimer) → Controllers (MultiTimerController) → Views (TimerDisplay, HomeScreen).
+* **Persistance JSON :** Sérialisation complète de tous les timers avec leurs états via toJson()/fromJson().
+* **Hauteurs Fixes :** SizedBox avec hauteurs fixes pour chaque section (titre: 40px, montant: 60/120px, timer: 35/50px, boutons: 50/70px) garantissant alignement parfait.
+* **Color Coding :** Bordures cyan/orange pour distinction immédiate, logique basée sur timerIndex.
+* **Layout Réactif :** Nombre de colonnes s'adapte automatiquement au nombre de timers actifs.
+* **Isolation Fonctionnelle :** updateHourlyRateOnly() créée pour éviter écrasement de rateTitle lors des mises à jour de taux.
 
 --------------------------------------------------------------------------------
-2. PROCHAINE ÉTAPE (PRIORITÉ ÉLEVÉE)
+2. PROCHAINES ÉTAPES (PRIORITÉS)
 --------------------------------------------------------------------------------
 
-**OBJECTIF :** Implémenter la journalisation et l'historique des sessions.
+**PRIORITÉ 1 - IMPORT/EXPORT DE CONFIGURATIONS (V1.3.0 PLANIFIÉ) :**
+* **Objectif :** Permettre à l'utilisateur de sauvegarder et partager ses configurations de timers.
+* **Détails Attendus :**
+    - Export : Générer un fichier JSON contenant tous les timers (rates, currency, rateTitle, etc.).
+    - Import : Charger un fichier JSON pour restaurer des configurations.
+    - Interface : Boutons dans SettingsScreen pour Export/Import.
+    - Validation : Vérifier la structure JSON importée avant application.
+* **Bénéfice :** Sauvegarde externe, partage entre appareils, réutilisation de configurations complexes.
 
-**DÉTAILS ATTENDUS :**
-* **Modèle de Session :** Créer un modèle `Session` (Date, Durée, Taux Horaire, Gain Brut Final, Gain Net Final).
-* **Sauvegarde :** Enregistrer les sessions terminées de manière persistante (par ex. via `IStorageService` stockant une liste JSON).
-* **Interface :** Créer un écran `HistoryScreen` pour afficher les sessions et permettre export (CSV/JSON).
-* **Déclenchement :** L'enregistrement d'une session doit se faire au moment du RESET ou lors de la fin d'une session (si durée > 0).
+**PRIORITÉ 2 - HISTORIQUE DES SESSIONS (V1.3.0 OU V1.4.0) :**
+* **Objectif :** Journaliser et afficher l'historique des sessions de travail.
+* **Détails Attendus :**
+    - Modèle Session : Date, Durée, Taux Horaire, Nom du Timer, Gain Brut Final, Gain Net Final.
+    - Sauvegarde : Enregistrer sessions terminées via IStorageService (liste JSON).
+    - Interface : Écran HistoryScreen pour visualiser, filtrer, exporter (CSV/JSON).
+    - Déclenchement : Enregistrement automatique au RESET (si durée > 0).
+* **Bénéfice :** Suivi des activités, analyses temporelles, export pour comptabilité.
+
+**AMÉLIORATIONS FUTURES :**
+* Support de plus de 2 timers simultanés (grille responsive).
+* Notifications push pour milestones de gains.
+* Mode sombre/clair personnalisable.
+* Graphiques d'évolution des gains (dashboard analytics).
+* Intégration calendrier pour planning des sessions.
 
 --------------------------------------------------------------------------------
 3. NOTES OPÉRATIONNELLES / VERSIONING
 --------------------------------------------------------------------------------
-* La version affichée dans le `FooterBar` suit cette priorité : explicit param → `pubspec.yaml` asset → `PackageInfo`.
-* Pour empaqueter `pubspec.yaml` comme asset (méthode utilisée ici), exécutez `flutter pub get` puis rebuild afin que le fichier soit inclus dans le bundle d'assets.
-* Un script `scripts/update_version.ps1` est fourni pour incrémenter le build number à partir du nombre de commits Git et relancer `flutter pub get` automatiquement.
+
+**FORMAT DE VERSION :**
+* Schéma : `MAJOR.MINOR.PATCH+DDMMYY`
+* Exemple : `1.2.0+121025` (version 1.2.0, build du 12 octobre 2025)
+* Fichier source : `pubspec.yaml` (property `version`)
+
+**AFFICHAGE VERSION :**
+* FooterBar suit cette priorité : explicit param → pubspec.yaml asset → PackageInfo.
+* Format affiché : `v1.2.0.121025` (le + est remplacé par . pour lisibilité).
+* Splash screen affiche une version simplifiée : `v1.2`.
+
+**WORKFLOW DE MISE À JOUR :**
+1. Modifier `version` dans `pubspec.yaml` (ex: `1.2.0+121025` → `1.3.0+150126`).
+2. Exécuter `flutter pub get` pour empaqueter pubspec.yaml comme asset.
+3. Mettre à jour CHANGELOG.txt avec les nouvelles fonctionnalités.
+4. Mettre à jour version hardcodée dans splash_screen.dart si nécessaire.
+5. Rebuild complet (`flutter clean && flutter build`) pour inclure nouveaux assets.
+
+**SCRIPT AUTOMATIQUE :**
+* Un script `scripts/update_version.ps1` est fourni pour incrémenter automatiquement le build number à partir du nombre de commits Git et relancer `flutter pub get`.
+
+**DEBUGGING VERSION :**
+* Si la version ne s'affiche pas correctement, vérifier :
+    1. pubspec.yaml est bien listé dans `flutter.assets`.
+    2. `flutter pub get` a été exécuté après modification.
+    3. Rebuild complet effectué (éviter hot reload pour changements d'assets).
+    4. Cache navigateur vidé pour tests web.
+
+--------------------------------------------------------------------------------
+4. ARCHITECTURE TECHNIQUE DÉTAILLÉE
+--------------------------------------------------------------------------------
+
+**MODÈLES (lib/models/) :**
+* `single_timer.dart` : 
+    - Properties : id, name, isActive, isRunning, elapsedDuration, hourlyRate, currency, rateTitle, netGrossRatio, estimatedMonthlyHours, estimatedAnnualHours
+    - Methods : calculateGains(), recalculateTime(), toJson(), fromJson()
+    - Rôle : Encapsuler l'état complet d'un timer individuel
+* `preset_rates.dart` :
+    - Liste statique de PresetRate (name, hourlyRate, currency, netGrossRatio)
+    - Catégories : Sport, Tech, Médecine, Personnalisé
+    - Rôle : Fournir des templates de configuration rapide
+
+**CONTROLLERS (lib/providers/) :**
+* `multi_timer_controller.dart` :
+    - État : List<SingleTimer> _timers (max 2), Timer _ticker
+    - Contrôles Individuels : startTimer(index), stopTimer(index), resetTimer(index)
+    - Contrôles Globaux : startAllTimers(), stopAllTimers(), resetAllTimers(), synchronizeTimers()
+    - Gestion : addTimer(), removeTimer(), toggleTimerActive(index)
+    - Configuration : setHourlyRate(), updateHourlyRateOnly(), setCurrency(), setRateTitle(), setNetGrossRatio(), setEstimatedHours()
+    - Persistance : _loadFromStorage(), _saveToStorage() avec JSON serialization
+    - Rôle : État global, orchestration, persistance
+
+**WIDGETS (lib/widgets/) :**
+* `timer_display.dart` :
+    - Props : timer (SingleTimer), timerIndex (pour colors), isCompact (layout), callbacks
+    - Render : Bordure color-coded, SizedBox hauteurs fixes, formatDuration adaptatif
+    - Colors : Timer 1 = cyan (#00BCD4), Timer 2 = orange (#FF9800)
+    - Rôle : Affichage réutilisable d'un timer avec style uniforme
+* `footer_bar.dart` :
+    - Props : version (optional explicit), showVersion (bool)
+    - Logique : Lecture pubspec.yaml via rootBundle, fallback vers PackageInfo
+    - Rôle : Affichage version et crédits
+* `animated_hourglass.dart` :
+    - CustomPainter animé pour sablier
+    - Rôle : Élément visuel splash screen
+* `falling_currency.dart` :
+    - Particules animées de symboles monétaires
+    - Optimisé pour performance (moins d'instances, update rate réduit)
+    - Rôle : Fond décoratif animé
+
+**SCREENS (lib/screens/) :**
+* `home_screen.dart` :
+    - Layout : _buildNoTimersView() / _buildSingleTimerView() / _buildMultiTimerView()
+    - Logique : Switch basé sur activeTimers.length
+    - Zone Centrale : 60px width, boutons sync verticaux
+    - Rôle : Point d'entrée principal, orchestration UI
+* `settings_screen.dart` :
+    - Sections : Timer Management, Settings (per-timer)
+    - Timer Management : Liste avec add/remove, bordures color-coded
+    - Settings : Configuration par timer (rate, currency, net/gross, estimates)
+    - Rôle : Configuration et gestion des timers
+* `splash_screen.dart` :
+    - Affichage : Hourglass animé + version + optionnel FallingCurrency
+    - Navigation : Automatique vers HomeScreen après délai
+    - Rôle : Écran d'accueil avec branding
+
+**SERVICES (lib/services/) :**
+* `storage_service.dart` :
+    - Interface : IStorageService (getString, setString, remove, clear)
+    - Implémentation : SharedPreferencesStorage
+    - Rôle : Abstraction persistance pour testabilité
+
+**TESTS (test/) :**
+* `timer_controller_test.dart` : Tests legacy TimerController avec FakeStorage
+* `test_helpers/` : Utilities pour tests (mocks, fakes)
+* Rôle : Validation comportements critiques
+
+**DÉPENDANCES PRINCIPALES :**
+* provider : État réactif
+* shared_preferences : Persistance locale
+* package_info_plus : Informations version app
+* flutter_svg : Support SVG assets
+
+--------------------------------------------------------------------------------
+5. BUGS RÉSOLUS ET LEÇONS APPRISES
+--------------------------------------------------------------------------------
+
+**BUG 1 - rateTitle Écrasé lors de l'application de Presets :**
+* Symptôme : rateTitle revenait à "Taux Personnalisé" après sélection d'un preset.
+* Cause : setHourlyRate() écrasait systématiquement le rateTitle.
+* Solution : Création de updateHourlyRateOnly() qui modifie uniquement le taux.
+* Leçon : Séparer les méthodes de mise à jour selon les contextes d'utilisation.
+
+**BUG 2 - Version Incorrecte dans Splash Screen :**
+* Symptôme : v1.1 affiché alors que la version réelle était v1.2.
+* Cause : Version hardcodée non mise à jour lors du bump.
+* Solution : Recherche/remplacement systématique de la version hardcodée.
+* Leçon : Éviter les valeurs hardcodées, utiliser pubspec.yaml comme source unique.
+
+**BUG 3 - Footer Affichant Mauvaise Version :**
+* Symptôme : Footer montrait v1.1.0.051025 au lieu de v1.2.0.121025.
+* Cause : Logique basée sur date au lieu du build number de pubspec.yaml.
+* Solution : Modification footer_bar.dart pour lire version complète depuis pubspec.
+* Leçon : Suivre le build number de pubspec.yaml, pas de calcul date dynamique.
+
+**BUG 4 - Cache Navigateur Empêchant Mise à Jour :**
+* Symptôme : "Gains NETS" persistait malgré changements code vers rateTitle.
+* Cause : Hot reload insuffisant pour changements de logique métier sur web.
+* Solution : Kill all dart.exe processes + full app restart.
+* Leçon : Sur web, privilégier full restart pour changements majeurs.
+
+**BUG 5 - Désalignement Colonnes Multi-Timer :**
+* Symptôme : Hauteurs variables entre timers causant décalage visuel.
+* Cause : Textes dynamiques (montants, durées) de longueurs différentes.
+* Solution : SizedBox avec hauteurs fixes pour toutes les sections.
+* Leçon : Pour layouts multi-colonnes, imposer contraintes de hauteur strictes.
 
 ================================================================================
-```
+FIN DU DOCUMENT DE RÉFÉRENCE
+================================================================================

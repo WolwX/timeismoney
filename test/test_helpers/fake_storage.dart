@@ -50,4 +50,10 @@ class FakeStorage implements IStorageService {
 
   @override
   Future<void> setWeeklyHours(double hours) async => _data['weeklyHours'] = hours;
+
+  @override
+  Future<String?> getString(String key) async => _data[key] as String?;
+
+  @override
+  Future<void> setString(String key, String value) async => _data[key] = value;
 }

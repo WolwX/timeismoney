@@ -1,6 +1,78 @@
 CHANGELOG
 ================================================================================
 
+Date : 12/10/2025
+
+--------------------------------------------------------------------------------
+V. 1.2.0 - Système Multi-Timer & Améliorations UI
+--------------------------------------------------------------------------------
+
+NOUVELLES FONCTIONNALITÉS MAJEURES
+
+* **Système Multi-Timer :**
+    * Possibilité de gérer jusqu'à 2 timers simultanés
+    * Chaque timer peut avoir des paramètres indépendants (taux, devise, réglages)
+    * Activation/désactivation individuelle des timers
+    * Affichage en 1 colonne (1 timer actif) ou 2 colonnes (2 timers actifs)
+    * Zone centrale de contrôle avec boutons de synchronisation
+    * Persistence complète des états de tous les timers
+
+* **Gestion des Timers :**
+    * Section dédiée dans les réglages pour gérer les timers
+    * Ajout/suppression de timers (minimum 1, maximum 2)
+    * Sélection du timer à configurer
+    * Nommage personnalisable des timers
+
+AMÉLIORATIONS UX/UI
+
+* **Affichage du Titre de Taux :**
+    * Remplacement de "Gains NETS" par le nom du réglage sélectionné
+    * Affichage de "Kylian Mbappé", "Salaire Mensuel Brut", etc. selon le préréglage choisi
+    * Titre visible sur l'écran principal et dans la liste des timers
+
+* **Distinction Visuelle par Couleur :**
+    * Timer 1 : Bordure cyan (bleu clair)
+    * Timer 2 : Bordure orange
+    * Couleurs cohérentes sur l'écran principal et dans les réglages
+    * Section de paramètres colorée selon le timer sélectionné
+
+* **Alignement et Hauteurs Fixes :**
+    * Hauteurs fixes pour chaque section en mode 2 colonnes
+    * Synchronisation parfaite des lignes entre les deux timers
+    * Amélioration de la lisibilité et de l'esthétique
+
+* **Indication du Timer en Configuration :**
+    * Titre des paramètres affiche "(Timer 1)" ou "(Timer 2)"
+    * Meilleure identification du timer en cours de modification
+
+AMÉLIORATIONS TECHNIQUES
+
+* **Architecture Multi-Timer :**
+    * Nouveau modèle `SingleTimer` encapsulant l'état d'un timer
+    * `MultiTimerController` pour gérer la collection de timers
+    * Widget `TimerDisplay` réutilisable avec modes compact/full
+    * Sérialisation JSON pour la persistance des timers
+
+* **Contrôles Individuels et Globaux :**
+    * `startTimer(index)`, `stopTimer(index)`, `resetTimer(index)` pour les contrôles individuels
+    * `startAllTimers()`, `stopAllTimers()`, `resetAllTimers()` pour les contrôles globaux
+    * `synchronizeTimers()` pour copier le temps du premier timer sur les autres
+
+* **Gestion des Titres de Taux :**
+    * Méthode `updateHourlyRateOnly()` pour mettre à jour le taux sans réinitialiser le titre
+    * Conservation du nom du préréglage après application
+
+--------------------------------------------------------------------------------
+TODO / FONCTIONNALITÉS FUTURES
+--------------------------------------------------------------------------------
+
+* **Import/Export de Configurations :**
+    * Sauvegarde des réglages d'un timer dans un fichier
+    * Import de configurations sauvegardées
+    * Partage de configurations entre appareils
+
+================================================================================
+
 Date : 01/10/2025
 
 --------------------------------------------------------------------------------
