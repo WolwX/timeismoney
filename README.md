@@ -1,15 +1,40 @@
 # 💰 Time Is Money
-## Suivi de Gains en Temps Réel
+## Suivi de Gains en Temps Réel avec Base de Données Internationale
 
-Bienvenue dans **Time Is Money**, une application Flutter conçue pour visualiser la valeur de votre temps en argent. Elle calcule et affiche vos gains en temps réel, basés sur un taux horaire configurable.
+Bienvenue dans **Time Is Money**, une application Flutter conçue pour visualiser la valeur de votre temps en argent. Elle calcule et affiche vos gains en temps réel, basés sur un taux horaire configurable, avec support de 36 pays et leurs salaires minimums réels.
 
 ---
 
-## ✨ État actuel (v1.2.0)
+## ✨ État actuel (v1.3.0)
 
-Voici les changements et améliorations notables présents dans la version 1.2.0 :
+Voici les changements et améliorations notables présents dans la version 1.3.0 :
 
-### 🎯 Système Multi-Timer
+### 🌍 Base de Données Internationale (NOUVEAU)
+- **36 pays** avec salaires minimums réels organisés par continent
+- **Taux de conversion NET spécifiques** : de 68% (Belgique) à 95% (Thaïlande)
+- **Heures hebdomadaires réelles** : de 35h (France) à 52h (Corée du Sud)
+- **Application automatique** des paramètres pays lors de la sélection
+- **Fourchette complète** : 0.10 $/h (Venezuela) à 24.50 CHF/h (Suisse)
+- **Nouveaux pays** : Luxembourg, Irlande, Islande, Andorre, Venezuela, Ouganda, Soudan du Sud, Bangladesh, Pakistan, Nigeria
+
+### ✏️ Édition Manuelle du Temps (NOUVEAU)
+- **Clic sur l'affichage du temps** (quand timer en pause) pour éditer
+- **Interface intuitive** avec 3 champs : Heures, Minutes, Secondes
+- **Validation automatique** (minutes/secondes < 60)
+- **Icône d'édition** visible uniquement sur timers arrêtés
+- **Recalcul automatique** des gains après modification
+- **Persistence immédiate** dans le stockage
+
+### 📊 Calculs Dynamiques par Pays (NOUVEAU)
+- **Estimations basées sur heures réelles** : plus de valeur fixe 35h/sem
+- **Affichage personnalisé** : "Base 42h/sem." pour Suisse, "Base 52h/sem." pour Corée
+- **Calculs précis** : hoursPerMonth = (weeklyHours × 52) / 12
+- **Exemples** :
+  - France 35h : 151.67h/mois, 1820h/an
+  - Suisse 42h : 182h/mois, 2184h/an (+20%)
+  - Corée 52h : 226.67h/mois, 2704h/an (+48.6%)
+
+### 🎯 Système Multi-Timer (v1.2.0)
 - **Gestion de 2 timers simultanés** avec paramètres indépendants (taux, devise, réglages)
 - **Affichage adaptatif** : 1 colonne (1 timer actif) ou 2 colonnes (2 timers actifs)
 - **Zone centrale de contrôle** avec boutons de synchronisation
@@ -24,11 +49,12 @@ Voici les changements et améliorations notables présents dans la version 1.2.0
 - **Indication claire** du timer en cours de modification dans les réglages
 
 ### 🏗️ Architecture
-- Nouveau modèle `SingleTimer` encapsulant l'état d'un timer
-- `MultiTimerController` pour gérer la collection de timers
-- Widget `TimerDisplay` réutilisable (modes compact/full)
-- Sérialisation JSON pour la persistance
-- Contrôles individuels et globaux (start/stop/reset, synchronisation)
+- Modèle `SingleTimer` avec setManualTime() pour édition
+- Modèle `PresetRate` étendu avec netRatePercentage et weeklyHours
+- `MultiTimerController` avec editTimerTime() pour persistence
+- Widget `TimerDisplay` avec dialogue d'édition interactive
+- Sérialisation JSON complète avec toutes les métadonnées
+- Contrôles individuels et globaux (start/stop/reset/edit, synchronisation)
 
 ### 📋 Historique v1.1.0
 - Architecture et tests avec interface `IStorageService`
@@ -37,6 +63,30 @@ Voici les changements et améliorations notables présents dans la version 1.2.0
 - Fond animé de particules monétaires optimisé
 - `FooterBar` avec version dynamique depuis pubspec.yaml
 - Script `update_version.ps1` pour automatisation
+
+---
+
+## 🌐 Pays Disponibles (v1.3.0)
+
+### 💎 Top 5 Pays Riches (Salaire Minimum)
+1. **Suisse** : 24.50 CHF/h (88% NET, 42h/sem)
+2. **Luxembourg** : 14.50 €/h (85% NET, 40h/sem)
+3. **Australie** : 14.00 A$/h (83% NET, 38h/sem)
+4. **Islande** : 13.85 €/h (84% NET, 40h/sem)
+5. **Nouvelle-Zélande** : 13.20 NZ$/h (85% NET, 40h/sem)
+
+### 💸 Top 5 Pays Pauvres (Salaire Minimum)
+1. **Venezuela** : 0.10 $/h (88% NET, 40h/sem)
+2. **Soudan du Sud** : 0.15 $/h (95% NET, 48h/sem)
+3. **Ouganda** : 0.25 $/h (95% NET, 48h/sem)
+4. **Bangladesh** : 0.35 $/h (92% NET, 48h/sem)
+5. **Pakistan** : 0.40 $/h (90% NET, 48h/sem)
+
+### 🌍 Autres Pays Disponibles
+Europe : France, Allemagne, Belgique, Pays-Bas, Irlande, Espagne, Portugal, Royaume-Uni, Pologne, Russie, Andorre  
+Amériques : USA, Canada, Brésil, Argentine, Mexique  
+Asie : Japon, Corée du Sud, Chine, Thaïlande, Inde  
+Afrique : Afrique du Sud, Maroc, Kenya, Égypte, Nigeria
 
 ---
 
@@ -69,7 +119,7 @@ Voici les changements et améliorations notables présents dans la version 1.2.0
 ### Notes sur la version
 
 - La version affichée dans le footer provient directement du `pubspec.yaml`
-- Format : `v1.2.0.121025` (version.buildNumber)
+- Format : `v1.3.0.141025` (version.buildNumber)
 - Le build number suit le format DDMMYY (date de release)
 
 ---

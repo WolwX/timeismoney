@@ -29,11 +29,11 @@ class SingleTimer {
     this.elapsedDuration = Duration.zero,
     this.pausedDuration = Duration.zero,
     this.sessionStartTime,
-    this.hourlyRate = 15.00,
+    this.hourlyRate = 11.88,
     this.currency = '€',
     this.currentGains = 0.0,
-    this.rateTitle = 'Taux Personnalisé',
-    this.netRatePercentage = 77.0,
+    this.rateTitle = 'SMIC Français',
+    this.netRatePercentage = 77.6,
     this.weeklyHours = 35.0,
   });
 
@@ -50,6 +50,13 @@ class SingleTimer {
     if (sessionStartTime == null) return;
     final timeSinceStart = DateTime.now().difference(sessionStartTime!);
     elapsedDuration = pausedDuration + timeSinceStart;
+    calculateGains();
+  }
+
+  // Permet d'éditer manuellement le temps écoulé
+  void setManualTime(Duration newDuration) {
+    elapsedDuration = newDuration;
+    pausedDuration = newDuration;
     calculateGains();
   }
 

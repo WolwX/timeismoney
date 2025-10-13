@@ -1,7 +1,7 @@
 PROJECT REFERENCE FILE
 ================================================================================
-DERNIÈRE MISE À JOUR : 12/10/2025
-BUT DU PROJET : Application Flutter de chronométrage financier ("Time Is Money") affichant les gains en temps réel basés sur un taux horaire paramétrable avec support multi-timer.
+DERNIÈRE MISE À JOUR : 14/10/2025
+BUT DU PROJET : Application Flutter de chronométrage financier ("Time Is Money") affichant les gains en temps réel basés sur un taux horaire paramétrable avec support multi-timer et base de données internationale de salaires minimums.
 CONTEXTE TECHNIQUE : 
     - Framework : Flutter
     - Gestion d'état : Provider (ChangeNotifier)
@@ -9,77 +9,183 @@ CONTEXTE TECHNIQUE :
     - Architecture : MVVM avec models, controllers, widgets réutilisables
 
 --------------------------------------------------------------------------------
-1. ÉTAT ACTUEL DE L'APPLICATION (V. 1.2.0)
+1. ÉTAT ACTUEL DE L'APPLICATION (V. 1.3.0)
 --------------------------------------------------------------------------------
 
 FONCTIONNALITÉS COMPLÈTES :
 
-**SYSTÈME MULTI-TIMER (NOUVEAU EN V1.2.0) :**
-1.  **Gestion de 2 Timers Indépendants :** L'application permet de créer jusqu'à 2 chronomètres simultanés avec configurations différentes.
-2.  **Contrôles Individuels :** Chaque timer possède ses propres boutons Start/Stop/Reset.
-3.  **Synchronisation :** Zone centrale avec boutons pour démarrer/arrêter/réinitialiser tous les timers simultanément.
-4.  **Gestion des Timers :** Interface pour ajouter, supprimer et activer/désactiver les timers (max 2).
-5.  **Distinction Visuelle :** 
+**BASE DE DONNÉES INTERNATIONALE (NOUVEAU EN V1.3.0) :**
+1.  **36 Pays avec Salaires Minimums Réels :**
+    * Organisation géographique : Europe (14), Pays Riches (3), Amériques (6), Asie (7), Afrique (6)
+    * Fourchette complète : 0.10 $/h (Venezuela) à 24.50 CHF/h (Suisse) - ratio 1:245
+    * Nouveaux pays : Luxembourg, Irlande, Islande, Andorre, Venezuela, Ouganda, Soudan du Sud, Bangladesh, Pakistan, Nigeria
+
+2.  **Taux NET Spécifiques par Pays :**
+    * Chaque pays a son pourcentage BRUT → NET basé sur sa fiscalité réelle
+    * Fourchette : 68% (Belgique) à 95% (Thaïlande, Ouganda, Soudan du Sud)
+    * Application automatique lors de la sélection d'un preset pays
+    * Exemples : France 77.6%, Suisse 88%, Royaume-Uni 87%, Japon 80%
+
+3.  **Heures Hebdomadaires Réelles par Pays :**
+    * Heures de travail légales hebdomadaires par pays
+    * Fourchette : 35h/semaine (France) à 52h/semaine (Corée du Sud)
+    * Calcul dynamique : hoursPerMonth = (weeklyHours × 52) / 12, hoursPerYear = weeklyHours × 52
+    * Affichage personnalisé : "Estimations Annuelles (Base XXh/sem.)"
+    * Exemples : France 35h (1820h/an), Suisse 42h (2184h/an), Corée 52h (2704h/an)
+
+**ÉDITION MANUELLE DU TEMPS (NOUVEAU EN V1.3.0) :**
+4.  **Interface d'Édition Interactive :**
+    * Clic sur l'affichage du temps (quand timer en pause) ouvre un dialogue
+    * 3 champs de saisie : Heures, Minutes, Secondes
+    * Format visuel avec séparateurs `:` entre les champs
+    * Icône d'édition (✏️) visible uniquement sur timers arrêtés
+
+5.  **Validation et Persistence :**
+    * Validation automatique : minutes et secondes doivent être < 60
+    * Méthode SingleTimer.setManualTime(Duration) met à jour état complet
+    * Recalcul automatique des gains après modification
+    * Callback onTimeEdited déclenche persistence via MultiTimerController.editTimerTime()
+    * Message de confirmation visuel
+
+**SYSTÈME MULTI-TIMER (V1.2.0) :**
+6.  **Gestion de 2 Timers Indépendants :** L'application permet de créer jusqu'à 2 chronomètres simultanés avec configurations différentes.
+7.  **Contrôles Individuels :** Chaque timer possède ses propres boutons Start/Stop/Reset + édition du temps.
+8.  **Synchronisation :** Zone centrale avec boutons pour démarrer/arrêter/réinitialiser tous les timers simultanément.
+9.  **Gestion des Timers :** Interface pour ajouter, supprimer et activer/désactiver les timers (max 2).
+10. **Distinction Visuelle :** 
     * Timer 1 : Bordure cyan (#00BCD4)
     * Timer 2 : Bordure orange (#FF9800)
     * Hauteurs fixes pour alignement parfait des colonnes
-6.  **Layout Adaptatif :**
+11. **Layout Adaptatif :**
     * 0 timers actifs : Message de bienvenue
     * 1 timer actif : Affichage plein écran (mode full)
     * 2 timers actifs : 2 colonnes avec zone de contrôle centrale (mode compact)
 
 **FONCTIONNALITÉS HÉRITÉES :**
-7.  **Chronomètre et Calcul en Temps Réel :** Chaque Timer incrémente le temps et calcule les gains (Brut → Net via facteur configurable).
-8.  **Personnalisation du Taux :** Configuration indépendante du taux horaire et de la devise pour chaque timer.
-9.  **Préréglages de Taux :** Liste de presets disponibles (via `lib/models/preset_rates.dart`) avec affichage du nom du preset (ex: "Kylian Mbappé" au lieu de "Gains NETS").
-10. **Calcul Brut/Net Paramétrable :**
-    * Pourcentage de conversion NET/BRUT stocké et réglable par utilisateur (défaut 77% pour France).
-    * Net = Brut × (TauxNet / 100).
-11. **Affichage des Gains :**
-    * Gain NET : Compteur principal (grosse police, Jaune/Or).
-    * Gain BRUT : Référence secondaire (Vert).
-12. **Estimations :** Estimations Mensuelles et Annuelles (Brut et Net) affichées pour chaque timer.
+12. **Chronomètre et Calcul en Temps Réel :** Chaque Timer incrémente le temps et calcule les gains (Brut → Net via facteur configurable).
+13. **Personnalisation du Taux :** Configuration indépendante du taux horaire, devise, pourcentage NET, heures hebdomadaires pour chaque timer.
+14. **Préréglages de Taux :** Liste de 36 presets internationaux + presets professionnels (via `lib/models/preset_rates.dart`) avec affichage du nom du preset (ex: "SMIC Français", "Salaire Minimum Suisse").
+15. **Calcul Brut/Net Paramétrable :**
+    * Pourcentage de conversion NET/BRUT stocké et réglable par utilisateur
+    * Valeurs par défaut par pays (France 77.6%, Belgique 68%, Thaïlande 95%)
+    * Net = Brut × (TauxNet / 100)
+16. **Affichage des Gains :**
+    * Gain NET : Compteur principal (grosse police, Jaune/Or)
+    * Gain BRUT : Référence secondaire (Vert)
+17. **Estimations :** Estimations Mensuelles et Annuelles (Brut et Net) calculées dynamiquement selon les heures hebdomadaires du pays.
 
 FICHIERS CLÉS ET RÔLES :
 
 **MODELS :**
-* `lib/models/single_timer.dart` (NOUVEAU) : Modèle encapsulant l'état d'un timer (id, name, isActive, isRunning, elapsedDuration, hourlyRate, currency, rateTitle, etc.) avec méthodes calculateGains(), recalculateTime(), toJson()/fromJson().
-* `lib/models/preset_rates.dart` : Définitions des presets de taux horaires (célébrités, professions).
+* `lib/models/single_timer.dart` : Modèle encapsulant l'état d'un timer
+    - Propriétés : id, name, isActive, isRunning, elapsedDuration, hourlyRate, currency, rateTitle, netRatePercentage, weeklyHours
+    - Méthodes : calculateGains(), recalculateTime(), setManualTime(Duration), toJson()/fromJson()
+    - NOUVEAU v1.3.0 : setManualTime() pour édition manuelle
+    - Rôle : Représentation complète d'un timer avec toutes ses métadonnées
+
+* `lib/models/preset_rates.dart` : Définitions des presets de taux horaires
+    - Structure : PresetRate(title, rate, currency, category, netRatePercentage, weeklyHours)
+    - NOUVEAU v1.3.0 : Champs netRatePercentage (68-95%) et weeklyHours (35-52h)
+    - 36 pays avec salaires minimums internationaux + presets professionnels
+    - Organisation : Europe (14), Pays Riches (3), Amériques (6), Asie (7), Afrique (6), Standard, Santé, Tech/IT, Politique, Sport, Célébrités
+    - Rôle : Base de données de référence mondiale
 
 **CONTROLLERS :**
-* `lib/providers/multi_timer_controller.dart` (NOUVEAU) : Gère la collection de timers (List<SingleTimer>), contrôles individuels/globaux, synchronisation, persistance JSON.
-* `lib/providers/timer_controller.dart` (LEGACY) : Ancien controller pour référence historique, non utilisé en v1.2.0.
+* `lib/providers/multi_timer_controller.dart` : Gère la collection de timers (List<SingleTimer>)
+    - Contrôles Individuels : startTimer(index), stopTimer(index), resetTimer(index), editTimerTime(index)
+    - Contrôles Globaux : startAllTimers(), stopAllTimers(), resetAllTimers(), synchronizeTimers()
+    - Gestion : addTimer(), removeTimer(), toggleTimerActive(index)
+    - Configuration : setHourlyRate(), updateHourlyRateOnly(), setCurrency(), setRateTitle(), setNetRatePercentage(), setWeeklyHours()
+    - NOUVEAU v1.3.0 : editTimerTime(index) pour persister les éditions manuelles
+    - Persistance : saveTimers(), loadTimers() avec JSON serialization
+    - Rôle : État global, orchestration, persistance
+
+* `lib/providers/timer_controller.dart` (LEGACY) : Ancien controller pour référence historique, non utilisé en v1.3.0
 
 **WIDGETS :**
-* `lib/widgets/timer_display.dart` (NOUVEAU) : Widget réutilisable affichant un timer avec bordures color-coded, hauteurs fixes, modes compact/full.
-* `lib/widgets/animated_hourglass.dart` : Sablier animé (CustomPainter) pour écran de démarrage.
-* `lib/widgets/falling_currency.dart` : Fond animé de symboles monétaires (particules).
-* `lib/widgets/footer_bar.dart` : Barre de footer affichant version (lit depuis pubspec.yaml, format v1.2.0.121025).
+* `lib/widgets/timer_display.dart` : Widget réutilisable affichant un timer
+    - Props : timer (SingleTimer), timerIndex, isCompact, callbacks (onStart, onStop, onReset, onTimeEdited)
+    - NOUVEAU v1.3.0 :
+        * GestureDetector sur affichage du temps (clic ouvre dialogue)
+        * _showEditTimeDialog() : dialogue avec 3 champs (H:M:S), validation, persistence
+        * onTimeEdited callback pour déclencher sauvegarde
+        * Calculs dynamiques : hoursPerMonth = (weeklyHours × 52) / 12, hoursPerYear = weeklyHours × 52
+        * Affichage dynamique : "Base ${hoursPerWeek}h/sem." au lieu de fixe "Base 35h/sem."
+        * Icône edit (✏️) visible uniquement si timer en pause
+    - Render : Bordure color-coded, SizedBox hauteurs fixes, formatDuration adaptatif
+    - Colors : Timer 1 = cyan, Timer 2 = orange
+    - Rôle : Affichage réutilisable avec édition interactive
+
+* `lib/widgets/footer_bar.dart` : Barre de footer avec version et crédits
+    - Lecture version depuis pubspec.yaml (rootBundle), fallback PackageInfo
+    - Format : v1.3.0.141025
+    - Rôle : Affichage version et crédits
+
+* `lib/widgets/animated_hourglass.dart` : Sablier animé (CustomPainter) pour splash
+* `lib/widgets/falling_currency.dart` : Particules animées de symboles monétaires
 
 **SCREENS :**
-* `lib/screens/home_screen.dart` (RÉÉCRIT) : Écran principal avec layout adaptatif (1 ou 2 colonnes), zone de contrôle centrale.
-* `lib/screens/settings_screen.dart` (MODIFIÉ) : Gestion des timers (add/remove/toggle), configuration par timer avec bordures color-coded.
-* `lib/screens/splash_screen.dart` (MODIFIÉ) : Version hardcodée mise à jour vers v1.2.
+* `lib/screens/home_screen.dart` : Écran principal avec layout adaptatif
+    - MODIFIÉ v1.3.0 : Tous les TimerDisplay reçoivent onTimeEdited callback
+    - Layout : _buildNoTimersView() / _buildSingleTimerView() / _buildMultiTimerView()
+    - Zone Centrale : 60px width, boutons sync verticaux
+    - Rôle : Point d'entrée principal, orchestration UI
+
+* `lib/screens/settings_screen.dart` : Configuration et gestion des timers
+    - MODIFIÉ v1.3.0 : _applyPreset() applique 4 paramètres (rate, currency, netRatePercentage, weeklyHours)
+    - Sections : Timer Management (add/remove/toggle), Settings (per-timer)
+    - Rôle : Configuration complète de tous les paramètres
+
+* `lib/screens/splash_screen.dart` : Écran d'accueil avec hourglass animé
+* `lib/screens/settings_screen_backup.dart` : Backup ancien settings pour référence
 
 **SERVICES :**
-* `lib/services/storage_service.dart` : Interface `IStorageService` et implémentation SharedPreferences.
+* `lib/services/storage_service.dart` : Abstraction persistance (IStorageService + SharedPreferencesStorage)
 
 **TESTS :**
-* `test/timer_controller_test.dart` : Tests unitaires pour l'ancien TimerController (référence).
+* `test/timer_controller_test.dart` : Tests legacy TimerController avec FakeStorage
+* `test/test_helpers/` : Utilities pour tests (mocks, fakes)
 
 CHOIX D'IMPLÉMENTATION NOTABLES :
-* **Architecture MVVM :** Séparation claire Models (SingleTimer) → Controllers (MultiTimerController) → Views (TimerDisplay, HomeScreen).
-* **Persistance JSON :** Sérialisation complète de tous les timers avec leurs états via toJson()/fromJson().
-* **Hauteurs Fixes :** SizedBox avec hauteurs fixes pour chaque section (titre: 40px, montant: 60/120px, timer: 35/50px, boutons: 50/70px) garantissant alignement parfait.
-* **Color Coding :** Bordures cyan/orange pour distinction immédiate, logique basée sur timerIndex.
-* **Layout Réactif :** Nombre de colonnes s'adapte automatiquement au nombre de timers actifs.
-* **Isolation Fonctionnelle :** updateHourlyRateOnly() créée pour éviter écrasement de rateTitle lors des mises à jour de taux.
+* **Architecture MVVM :** Séparation claire Models (SingleTimer, PresetRate) → Controllers (MultiTimerController) → Views (TimerDisplay, HomeScreen)
+* **Persistance JSON :** Sérialisation complète de tous les timers avec netRatePercentage et weeklyHours
+* **Calculs Dynamiques :** Remplacement des constantes fixes (1820h/an) par calculs basés sur weeklyHours par timer
+* **Édition Interactive :** GestureDetector + AlertDialog pour modification directe du temps
+* **Validation Input :** Contrôles automatiques (minutes/secondes < 60) avant application
+* **Hauteurs Fixes :** SizedBox pour alignement parfait multi-colonnes
+* **Color Coding :** Bordures cyan/orange pour distinction immédiate
+* **Métadonnées Pays :** Chaque preset contient taux, devise, % NET, heures/semaine pour calculs précis
+* **Isolation Fonctionnelle :** updateHourlyRateOnly() pour éviter écrasement de rateTitle
+
+DONNÉES INTERNATIONALES (V1.3.0) :
+
+**Top 5 Pays Riches (Salaire Minimum) :**
+- Suisse : 24.50 CHF/h, 88% NET, 42h/sem
+- Luxembourg : 14.50 €/h, 85% NET, 40h/sem
+- Australie : 14.00 A$/h, 83% NET, 38h/sem
+- Islande : 13.85 €/h, 84% NET, 40h/sem
+- Nouvelle-Zélande : 13.20 NZ$/h, 85% NET, 40h/sem
+
+**Top 5 Pays Pauvres (Salaire Minimum) :**
+- Venezuela : 0.10 $/h, 88% NET, 40h/sem
+- Soudan du Sud : 0.15 $/h, 95% NET, 48h/sem
+- Ouganda : 0.25 $/h, 95% NET, 48h/sem
+- Bangladesh : 0.35 $/h, 92% NET, 48h/sem
+- Pakistan : 0.40 $/h, 90% NET, 48h/sem
+
+**Extrêmes Fiscaux :**
+- Taux NET le plus bas : Belgique 68% (taxes élevées)
+- Taux NET le plus haut : Thaïlande, Ouganda, Soudan du Sud 95% (taxes faibles)
+
+**Extrêmes Horaires :**
+- Heures min : France 35h/semaine (1820h/an, 151.67h/mois)
+- Heures max : Corée du Sud 52h/semaine (2704h/an, 226.67h/mois) - soit +48.6%
 
 --------------------------------------------------------------------------------
 2. PROCHAINES ÉTAPES (PRIORITÉS)
 --------------------------------------------------------------------------------
 
-**PRIORITÉ 1 - IMPORT/EXPORT DE CONFIGURATIONS (V1.3.0 PLANIFIÉ) :**
+**PRIORITÉ 1 - IMPORT/EXPORT DE CONFIGURATIONS (V1.4.0 PLANIFIÉ) :**
 * **Objectif :** Permettre à l'utilisateur de sauvegarder et partager ses configurations de timers.
 * **Détails Attendus :**
     - Export : Générer un fichier JSON contenant tous les timers (rates, currency, rateTitle, etc.).
@@ -243,6 +349,27 @@ CHOIX D'IMPLÉMENTATION NOTABLES :
 * Cause : Textes dynamiques (montants, durées) de longueurs différentes.
 * Solution : SizedBox avec hauteurs fixes pour toutes les sections.
 * Leçon : Pour layouts multi-colonnes, imposer contraintes de hauteur strictes.
+
+**BUG 6 - Calcul NET du SMIC Français Incorrect (V1.3.0) :**
+* Symptôme : Mensuel NET affiché 1387.42€ au lieu de ~1398€ attendu.
+* Cause : Taux NET de 77.0% au lieu de 77.6% (erreur de 0.6%).
+* Solution : Correction netRatePercentage de 77.0 → 77.6 dans single_timer.dart.
+* Impact : 1801.84€ BRUT × 0.776 = 1398.23€ NET (correction +10.81€/mois).
+* Leçon : Précision décimale critique pour calculs financiers, vérifier sources officielles.
+
+**BUG 7 - Estimations Annuelles Bloquées sur 35h/semaine (V1.3.0) :**
+* Symptôme : Toutes les estimations calculées sur base 35h/sem (France) même pour autres pays.
+* Cause : Constantes hardcodées hoursPerMonth=151.67, hoursPerYear=1820 dans timer_display.dart.
+* Solution : Calculs dynamiques basés sur timer.weeklyHours : hoursPerMonth = (weeklyHours × 52) / 12, hoursPerYear = weeklyHours × 52.
+* Impact : Correction majeure, ex: Suisse 42h/sem donne 2184h/an au lieu de 1820h/an (+20%).
+* Leçon : Éviter constantes hardcodées pour données variables par contexte.
+
+**BUG 8 - Application Incomplète des Presets Pays (V1.3.0) :**
+* Symptôme : Sélection d'un pays ne mettait à jour que le taux horaire et la devise.
+* Cause : _applyPreset() n'appliquait pas netRatePercentage ni weeklyHours.
+* Solution : Extension _applyPreset() pour appeler setNetRatePercentage() et setWeeklyHours().
+* Impact : Application cohérente de tous les paramètres pays (taux, devise, % NET, heures/sem).
+* Leçon : Lors de l'ajout de nouveaux champs au modèle, vérifier tous les points d'application.
 
 ================================================================================
 FIN DU DOCUMENT DE RÉFÉRENCE

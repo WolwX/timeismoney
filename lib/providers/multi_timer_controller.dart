@@ -153,13 +153,29 @@ class MultiTimerController extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Édition manuelle du temps d'un timer
+  void editTimerTime(int index) {
+    if (index < 0 || index >= _timers.length) return;
+    saveTimers();
+    notifyListeners();
+  }
+
   // Contrôles globaux
   void startAllTimers() {
+    // Capturer le temps exact AVANT de démarrer les timers
+    final now = DateTime.now();
+    
     for (int i = 0; i < _timers.length; i++) {
       if (_timers[i].isActive && !_timers[i].isRunning) {
-        startTimer(i);
+        // Utiliser le même timestamp pour tous les timers
+        _timers[i].isRunning = true;
+        _timers[i].sessionStartTime = now;
+        _timers[i].pausedDuration = _timers[i].elapsedDuration;
+        _startInternalTimer(_timers[i]);
       }
     }
+    notifyListeners();
+    saveTimers();
   }
 
   void stopAllTimers() {
@@ -187,6 +203,9 @@ class MultiTimerController extends ChangeNotifier {
 
     final refDuration = firstActiveTimer.elapsedDuration;
     final wasRunning = firstActiveTimer.isRunning;
+    
+    // Capturer le temps exact MAINTENANT pour synchronisation parfaite
+    final now = DateTime.now();
 
     for (var timer in activeTimers) {
       if (timer.id == firstActiveTimer.id) continue;
@@ -206,7 +225,8 @@ class MultiTimerController extends ChangeNotifier {
       // Redémarrer si le timer de référence tournait
       if (wasRunning) {
         timer.isRunning = true;
-        timer.sessionStartTime = DateTime.now();
+        // IMPORTANT : Utiliser le même timestamp pour tous !
+        timer.sessionStartTime = now;
         timer.pausedDuration = refDuration;
         _startInternalTimer(timer);
       }

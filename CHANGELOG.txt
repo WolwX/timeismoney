@@ -1,6 +1,111 @@
 CHANGELOG
 ================================================================================
 
+Date : 14/10/2025
+
+--------------------------------------------------------------------------------
+V. 1.3.0 - Internationalisation & Édition Manuelle du Temps
+--------------------------------------------------------------------------------
+
+NOUVELLES FONCTIONNALITÉS MAJEURES
+
+* **Base de Données Internationale de Salaires Minimums :**
+    * **36 pays ajoutés** avec leurs salaires minimums réels
+    * Organisation géographique : Europe (14 pays), Pays Riches (3), Amériques (6), Asie (7), Afrique (6)
+    * Fourchette complète : de 0.10 $/h (Venezuela) à 24.50 CHF/h (Suisse) - ratio de 1:245
+    * Nouveaux pays : Luxembourg, Irlande, Islande, Andorre, Venezuela, Ouganda, Soudan du Sud, etc.
+
+* **Taux de Conversion NET Spécifiques par Pays :**
+    * Chaque pays a son propre pourcentage de conversion BRUT → NET
+    * Fourchette : 68% (Belgique) à 95% (Thaïlande, Ouganda, Soudan du Sud)
+    * Application automatique lors de la sélection d'un preset pays
+    * Reflète les réalités fiscales de chaque pays
+
+* **Heures Hebdomadaires Réelles par Pays :**
+    * Chaque pays a ses heures de travail légales hebdomadaires
+    * Fourchette : 35h/semaine (France) à 52h/semaine (Corée du Sud)
+    * Calcul dynamique des estimations mensuelles/annuelles basé sur les heures réelles
+    * Affichage personnalisé : "Base XXh/sem." au lieu de "Base 35h/sem." fixe
+
+* **Édition Manuelle du Temps du Timer :**
+    * **Nouvelle fonctionnalité d'édition** : Clic sur l'affichage du temps quand le timer est en pause
+    * Interface de dialogue intuitive avec 3 champs : Heures, Minutes, Secondes
+    * Validation automatique (minutes et secondes < 60)
+    * Icône d'édition (✏️) visible uniquement sur timers arrêtés
+    * Recalcul automatique des gains après modification
+    * Persistence immédiate dans le stockage
+    * Confirmation visuelle avec message de succès
+
+AMÉLIORATIONS TECHNIQUES
+
+* **Modèle PresetRate Étendu :**
+    * Nouveau champ `netRatePercentage` (défaut 77.6% pour France)
+    * Nouveau champ `weeklyHours` (défaut 35.0h pour France)
+    * Tous les presets mis à jour avec ces métadonnées
+
+* **Calculs Dynamiques dans TimerDisplay :**
+    * Remplacement des constantes fixes (1820h/an, 151.67h/mois)
+    * Calcul basé sur `timer.weeklyHours` : 
+      - hoursPerMonth = (weeklyHours × 52) / 12
+      - hoursPerYear = weeklyHours × 52
+    * Affichage dynamique du nombre d'heures par semaine
+
+* **SingleTimer.setManualTime() :**
+    * Nouvelle méthode pour définir manuellement le temps écoulé
+    * Met à jour `elapsedDuration`, `pausedDuration` et recalcule les gains
+    * Permet la reprise du timer à partir d'un temps personnalisé
+
+* **MultiTimerController.editTimerTime() :**
+    * Nouvelle méthode de contrôle pour sauvegarder les éditions
+    * Déclenche la persistence et notifie les listeners
+
+CORRECTIONS DE BUGS
+
+* **Calcul NET du SMIC Français Corrigé :**
+    * Passage de 77.0% à 77.6% pour le taux NET
+    * Résultat : ~1398€/mois au lieu de ~1387€ (correction de +10.81€/mois)
+    * Calcul précis : 1801.84€ BRUT × 0.776 = 1398.23€ NET
+
+* **Application Complète des Presets :**
+    * La méthode `_applyPreset()` applique maintenant 4 paramètres :
+      - Taux horaire
+      - Devise
+      - Pourcentage NET
+      - Heures hebdomadaires
+    * Cohérence totale lors du changement de pays
+
+DONNÉES AJOUTÉES
+
+**Nouveaux Pays - Top 10 Riches :**
+- Luxembourg : 14.50 €/h (85% NET, 40h/sem)
+- Irlande : 13.00 €/h (80% NET, 39h/sem)
+- Australie : 14.00 A$/h (83% NET, 38h/sem)
+- Nouvelle-Zélande : 13.20 NZ$/h (85% NET, 40h/sem)
+- Islande : 13.85 €/h (84% NET, 40h/sem)
+
+**Nouveaux Pays - Top 10 Pauvres :**
+- Venezuela : 0.10 $/h (88% NET, 40h/sem)
+- Soudan du Sud : 0.15 $/h (95% NET, 48h/sem)
+- Ouganda : 0.25 $/h (95% NET, 48h/sem)
+- Bangladesh : 0.35 $/h (92% NET, 48h/sem)
+- Pakistan : 0.40 $/h (90% NET, 48h/sem)
+- Nigeria : 0.60 $/h (92% NET, 40h/sem)
+
+**Autres Ajouts :**
+- Andorre : 6.85 €/h (90% NET, 40h/sem)
+- Déjà présents : France, Allemagne, Belgique, Espagne, Portugal, Pays-Bas, Royaume-Uni, Pologne, Russie, Suisse, USA, Canada, Brésil, Argentine, Mexique, Japon, Corée du Sud, Chine, Thaïlande, Inde, Afrique du Sud, Maroc, Kenya, Égypte
+
+--------------------------------------------------------------------------------
+TODO / FONCTIONNALITÉS FUTURES
+--------------------------------------------------------------------------------
+
+* **Import/Export de Configurations :**
+    * Sauvegarde des réglages d'un timer dans un fichier
+    * Import de configurations sauvegardées
+    * Partage de configurations entre appareils
+
+================================================================================
+
 Date : 12/10/2025
 
 --------------------------------------------------------------------------------

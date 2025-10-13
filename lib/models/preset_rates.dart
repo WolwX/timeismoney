@@ -5,12 +5,16 @@ class PresetRate {
   final double rate;
   final String currency;
   final String category;
+  final double netRatePercentage; // Pourcentage de conversion BRUT → NET
+  final double weeklyHours; // Heures de travail hebdomadaires légales du pays
 
   PresetRate({
     required this.title, 
     required this.rate, 
     this.currency = '€', 
-    required this.category
+    required this.category,
+    this.netRatePercentage = 77.6, // Valeur par défaut (France)
+    this.weeklyHours = 35.0, // Valeur par défaut (France)
   });
 }
 
@@ -23,21 +27,66 @@ double _toHourly(double annualSalary) => annualSalary / _annualToHourlyFactor;
 final List<PresetRate> presetRates = [
   
   // ====================================================================
-  // --- Catégorie : Standard / Emploi ---
+  // --- CATÉGORIE : Salaires Minimums - Europe ---
   // ====================================================================
-  PresetRate(title: 'SMIC (France, 2024)', rate: 11.65, currency: '€', category: 'Standard / Emploi'), 
-  PresetRate(title: 'Ingénieur Débutant (Moy.)', rate: 25.00, currency: '€', category: 'Standard / Emploi'),
-  PresetRate(title: 'Médecin Généraliste (Moy.)', rate: 45.00, currency: '€', category: 'Standard / Emploi'),
-  PresetRate(title: 'Salaire Minimum (US)', rate: 7.25, currency: '\$', category: 'Standard / Emploi'),
+  PresetRate(title: 'Salaire Minimum Luxembourg', rate: 14.50, currency: '€', category: 'Salaires Minimums - Europe', netRatePercentage: 85.0, weeklyHours: 40.0),
+  PresetRate(title: 'Salaire Minimum Irlande', rate: 13.00, currency: '€', category: 'Salaires Minimums - Europe', netRatePercentage: 80.0, weeklyHours: 39.0),
+  PresetRate(title: 'Salaire Minimum Pays-Bas', rate: 13.27, currency: '€', category: 'Salaires Minimums - Europe', netRatePercentage: 82.0, weeklyHours: 40.0),
+  PresetRate(title: 'Salaire Minimum Allemagne', rate: 12.41, currency: '€', category: 'Salaires Minimums - Europe', netRatePercentage: 80.0, weeklyHours: 40.0),
+  PresetRate(title: 'SMIC Français', rate: 11.88, currency: '€', category: 'Salaires Minimums - Europe', netRatePercentage: 77.6, weeklyHours: 35.0), 
+  PresetRate(title: 'Salaire Minimum Belgique', rate: 11.78, currency: '€', category: 'Salaires Minimums - Europe', netRatePercentage: 68.0, weeklyHours: 38.0),
+  PresetRate(title: 'Salaire Minimum Royaume-Uni', rate: 11.44, currency: '£', category: 'Salaires Minimums - Europe', netRatePercentage: 87.0, weeklyHours: 40.0),
+  PresetRate(title: 'Salaire Minimum Espagne', rate: 8.85, currency: '€', category: 'Salaires Minimums - Europe', netRatePercentage: 84.0, weeklyHours: 40.0),
+  PresetRate(title: 'Salaire Minimum Portugal', rate: 5.25, currency: '€', category: 'Salaires Minimums - Europe', netRatePercentage: 78.0, weeklyHours: 40.0),
+  PresetRate(title: 'Salaire Minimum Pologne', rate: 4.30, currency: '€', category: 'Salaires Minimums - Europe', netRatePercentage: 82.0, weeklyHours: 40.0),
+  PresetRate(title: 'Salaire Minimum Russie', rate: 2.90, currency: '\$', category: 'Salaires Minimums - Europe', netRatePercentage: 87.0, weeklyHours: 40.0),
+  PresetRate(title: 'Salaire Minimum Islande', rate: 13.85, currency: '€', category: 'Salaires Minimums - Europe', netRatePercentage: 84.0, weeklyHours: 40.0),
+  PresetRate(title: 'Salaire Minimum Andorre', rate: 6.85, currency: '€', category: 'Salaires Minimums - Europe', netRatePercentage: 90.0, weeklyHours: 40.0),
   
   // ====================================================================
-  // --- NOUVELLE CATÉGORIE : SMIC International ---
+  // --- CATÉGORIE : Salaires Minimums - Pays Riches (Hors Catégorie) ---
   // ====================================================================
-  // Basé sur le taux horaire légal ou estimé BRUT
-  PresetRate(title: 'SMIC Espagne (Est. 2024)', rate: 8.85, currency: '€', category: 'SMIC International'), 
-  PresetRate(title: 'SMIC Allemagne (Est. 2024)', rate: 12.41, currency: '€', category: 'SMIC International'),
-  PresetRate(title: 'SMIC Royaume-Uni (Est. 2024)', rate: 13.00, currency: '£', category: 'SMIC International'),
-  PresetRate(title: 'Salaire Minimum (Canada Est.)', rate: 11.50, currency: 'CA\$', category: 'SMIC International'),
+  PresetRate(title: 'Salaire Minimum Suisse', rate: 24.50, currency: 'CHF', category: 'Salaires Minimums - Pays Riches', netRatePercentage: 88.0, weeklyHours: 42.0),
+  PresetRate(title: 'Salaire Minimum Australie', rate: 14.00, currency: 'A\$', category: 'Salaires Minimums - Pays Riches', netRatePercentage: 83.0, weeklyHours: 38.0),
+  PresetRate(title: 'Salaire Minimum Nouvelle-Zélande', rate: 13.20, currency: 'NZ\$', category: 'Salaires Minimums - Pays Riches', netRatePercentage: 85.0, weeklyHours: 40.0),
+  
+  // ====================================================================
+  // --- CATÉGORIE : Salaires Minimums - Amériques ---
+  // ====================================================================
+  PresetRate(title: 'Salaire Minimum USA (Fédéral)', rate: 7.25, currency: '\$', category: 'Salaires Minimums - Amériques', netRatePercentage: 85.0, weeklyHours: 40.0),
+  PresetRate(title: 'Salaire Minimum Canada (Moy.)', rate: 14.00, currency: 'CA\$', category: 'Salaires Minimums - Amériques', netRatePercentage: 82.0, weeklyHours: 40.0),
+  PresetRate(title: 'Salaire Minimum Brésil', rate: 2.80, currency: '\$', category: 'Salaires Minimums - Amériques', netRatePercentage: 75.0, weeklyHours: 44.0),
+  PresetRate(title: 'Salaire Minimum Argentine', rate: 2.20, currency: '\$', category: 'Salaires Minimums - Amériques', netRatePercentage: 83.0, weeklyHours: 48.0),
+  PresetRate(title: 'Salaire Minimum Mexique', rate: 1.50, currency: '\$', category: 'Salaires Minimums - Amériques', netRatePercentage: 88.0, weeklyHours: 48.0),
+  PresetRate(title: 'Salaire Minimum Venezuela', rate: 0.10, currency: '\$', category: 'Salaires Minimums - Amériques', netRatePercentage: 88.0, weeklyHours: 40.0),
+  
+  // ====================================================================
+  // --- CATÉGORIE : Salaires Minimums - Asie ---
+  // ====================================================================
+  PresetRate(title: 'Salaire Minimum Japon', rate: 7.50, currency: '\$', category: 'Salaires Minimums - Asie', netRatePercentage: 80.0, weeklyHours: 40.0),
+  PresetRate(title: 'Salaire Minimum Corée du Sud', rate: 6.50, currency: '\$', category: 'Salaires Minimums - Asie', netRatePercentage: 85.0, weeklyHours: 52.0),
+  PresetRate(title: 'Salaire Minimum Chine (Moy.)', rate: 2.50, currency: '\$', category: 'Salaires Minimums - Asie', netRatePercentage: 90.0, weeklyHours: 44.0),
+  PresetRate(title: 'Salaire Minimum Thaïlande', rate: 1.90, currency: '\$', category: 'Salaires Minimums - Asie', netRatePercentage: 95.0, weeklyHours: 48.0),
+  PresetRate(title: 'Salaire Minimum Inde (Est.)', rate: 0.50, currency: '\$', category: 'Salaires Minimums - Asie', netRatePercentage: 92.0, weeklyHours: 48.0),
+  PresetRate(title: 'Salaire Minimum Pakistan', rate: 0.40, currency: '\$', category: 'Salaires Minimums - Asie', netRatePercentage: 90.0, weeklyHours: 48.0),
+  PresetRate(title: 'Salaire Minimum Bangladesh', rate: 0.35, currency: '\$', category: 'Salaires Minimums - Asie', netRatePercentage: 92.0, weeklyHours: 48.0),
+  
+  // ====================================================================
+  // --- CATÉGORIE : Salaires Minimums - Afrique ---
+  // ====================================================================
+  PresetRate(title: 'Salaire Minimum Afrique du Sud', rate: 2.30, currency: '\$', category: 'Salaires Minimums - Afrique', netRatePercentage: 85.0, weeklyHours: 45.0),
+  PresetRate(title: 'Salaire Minimum Maroc', rate: 1.40, currency: '€', category: 'Salaires Minimums - Afrique', netRatePercentage: 90.0, weeklyHours: 44.0),
+  PresetRate(title: 'Salaire Minimum Kenya', rate: 1.10, currency: '\$', category: 'Salaires Minimums - Afrique', netRatePercentage: 93.0, weeklyHours: 45.0),
+  PresetRate(title: 'Salaire Minimum Égypte', rate: 0.80, currency: '\$', category: 'Salaires Minimums - Afrique', netRatePercentage: 90.0, weeklyHours: 48.0),
+  PresetRate(title: 'Salaire Minimum Nigeria', rate: 0.60, currency: '\$', category: 'Salaires Minimums - Afrique', netRatePercentage: 92.0, weeklyHours: 40.0),
+  PresetRate(title: 'Salaire Minimum Ouganda', rate: 0.25, currency: '\$', category: 'Salaires Minimums - Afrique', netRatePercentage: 95.0, weeklyHours: 48.0),
+  PresetRate(title: 'Salaire Minimum Soudan du Sud', rate: 0.15, currency: '\$', category: 'Salaires Minimums - Afrique', netRatePercentage: 95.0, weeklyHours: 48.0),
+  
+  // ====================================================================
+  // --- Catégorie : Standard / Emploi ---
+  // ====================================================================
+  PresetRate(title: 'Ingénieur Débutant (Moy.)', rate: 25.00, currency: '€', category: 'Standard / Emploi'),
+  PresetRate(title: 'Médecin Généraliste (Moy.)', rate: 45.00, currency: '€', category: 'Standard / Emploi'),
 
   // ====================================================================
   // --- Catégorie : Santé / Médical ---

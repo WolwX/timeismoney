@@ -9,6 +9,7 @@ class TimerDisplay extends StatefulWidget {
   final VoidCallback onStart;
   final VoidCallback onStop;
   final VoidCallback onReset;
+  final VoidCallback? onTimeEdited;
   final bool isCompact;
 
   const TimerDisplay({
@@ -18,6 +19,7 @@ class TimerDisplay extends StatefulWidget {
     required this.onStart,
     required this.onStop,
     required this.onReset,
+    this.onTimeEdited,
     this.isCompact = false,
   }) : super(key: key);
 
@@ -27,6 +29,152 @@ class TimerDisplay extends StatefulWidget {
 
 class _TimerDisplayState extends State<TimerDisplay> {
   bool _isExpanded = false;
+
+  // Fonction pour afficher le dialogue d'édition du temps
+  void _showEditTimeDialog(BuildContext context) {
+    final currentDuration = widget.timer.elapsedDuration;
+    
+    final hoursController = TextEditingController(
+      text: currentDuration.inHours.toString().padLeft(2, '0')
+    );
+    final minutesController = TextEditingController(
+      text: (currentDuration.inMinutes % 60).toString().padLeft(2, '0')
+    );
+    final secondsController = TextEditingController(
+      text: (currentDuration.inSeconds % 60).toString().padLeft(2, '0')
+    );
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Éditer le temps'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Entrez le temps souhaité :',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Heures
+                  Expanded(
+                    child: Column(
+                      children: [
+                        const Text('Heures', style: TextStyle(fontSize: 12)),
+                        const SizedBox(height: 5),
+                        TextField(
+                          controller: hoursController,
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(vertical: 10),
+                          ),
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(':', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 10),
+                  // Minutes
+                  Expanded(
+                    child: Column(
+                      children: [
+                        const Text('Minutes', style: TextStyle(fontSize: 12)),
+                        const SizedBox(height: 5),
+                        TextField(
+                          controller: minutesController,
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(vertical: 10),
+                          ),
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(':', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 10),
+                  // Secondes
+                  Expanded(
+                    child: Column(
+                      children: [
+                        const Text('Secondes', style: TextStyle(fontSize: 12)),
+                        const SizedBox(height: 5),
+                        TextField(
+                          controller: secondsController,
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(vertical: 10),
+                          ),
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Annuler'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final hours = int.tryParse(hoursController.text) ?? 0;
+                final minutes = int.tryParse(minutesController.text) ?? 0;
+                final seconds = int.tryParse(secondsController.text) ?? 0;
+                
+                // Validation
+                if (minutes > 59 || seconds > 59) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Les minutes et secondes doivent être < 60'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+                
+                final newDuration = Duration(
+                  hours: hours,
+                  minutes: minutes,
+                  seconds: seconds,
+                );
+                
+                widget.timer.setManualTime(newDuration);
+                widget.onTimeEdited?.call(); // Notifier le contrôleur pour sauvegarder
+                setState(() {}); // Rafraîchir l'affichage
+                Navigator.of(context).pop();
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Temps modifié : ${formatDuration(newDuration)}'),
+                    backgroundColor: Colors.green,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
+              child: const Text('Valider'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   // Fonction utilitaire pour formater la durée de manière dynamique
   String formatDuration(Duration duration) {
@@ -60,8 +208,10 @@ class _TimerDisplayState extends State<TimerDisplay> {
     final double currentGrossGains = widget.timer.currentGains;
     final double currentNetGains = currentGrossGains * widget.timer.netConversionFactor;
 
-    const double hoursPerMonth = 151.67;
-    const double hoursPerYear = 1820;
+    // Calcul dynamique basé sur les heures hebdomadaires du timer
+    final double hoursPerWeek = widget.timer.weeklyHours;
+    final double hoursPerMonth = (hoursPerWeek * 52) / 12; // Moyenne mensuelle
+    final double hoursPerYear = hoursPerWeek * 52;
     
     final double monthlyGross = widget.timer.hourlyRate * hoursPerMonth;
     final double yearlyGross = widget.timer.hourlyRate * hoursPerYear;
@@ -153,34 +303,44 @@ class _TimerDisplayState extends State<TimerDisplay> {
         
         const SizedBox(height: 2),
 
-        // 2. Temps écoulé - Hauteur fixe
+        // 2. Temps écoulé - Hauteur fixe (éditable si en pause)
         SizedBox(
           height: widget.isCompact ? 35 : 50, // Hauteur fixe pour le timer
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.timer,
-                  color: Colors.white,
-                  size: widget.isCompact ? 20 : 32,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      formatDuration(widget.timer.elapsedDuration),
-                      style: TextStyle(
-                        fontSize: gainFontSize * 0.5, 
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white, 
+            child: GestureDetector(
+              onTap: !widget.timer.isRunning ? () => _showEditTimeDialog(context) : null,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.timer,
+                    color: Colors.white,
+                    size: widget.isCompact ? 20 : 32,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        formatDuration(widget.timer.elapsedDuration),
+                        style: TextStyle(
+                          fontSize: gainFontSize * 0.5, 
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white, 
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                  // Icône d'édition si le timer est en pause
+                  if (!widget.timer.isRunning)
+                    Icon(
+                      Icons.edit,
+                      color: Colors.grey.shade400,
+                      size: widget.isCompact ? 16 : 20,
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -324,7 +484,7 @@ class _TimerDisplayState extends State<TimerDisplay> {
                         const SizedBox(height: 20),
                         
                         Text(
-                          'Estimations Annuelles (Base 35h/sem.)',
+                          'Estimations Annuelles (Base ${hoursPerWeek.toStringAsFixed(0)}h/sem.)',
                           style: TextStyle(fontSize: widget.isCompact ? 13 : 15, fontWeight: FontWeight.bold, color: Colors.white70),
                         ),
                         const Divider(height: 15, color: Colors.white30),

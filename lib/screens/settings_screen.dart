@@ -194,7 +194,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     controller.setCurrency(preset.currency);
     _currencyController.text = preset.currency;
     
-    controller.setRateTitle(preset.title); 
+    controller.setRateTitle(preset.title);
+    
+    // Applique le pourcentage NET/BRUT spécifique au pays
+    controller.setNetRatePercentage(preset.netRatePercentage);
+    _netRateController.text = preset.netRatePercentage.toStringAsFixed(1);
+    
+    // Applique les heures hebdomadaires spécifiques au pays
+    controller.setWeeklyHours(preset.weeklyHours);
+    _weeklyHoursController.text = preset.weeklyHours.toStringAsFixed(1);
 
     // Applique le nouveau taux et synchronise les champs
     _syncFieldsFromNewHourlyRate(controller, preset.rate);
