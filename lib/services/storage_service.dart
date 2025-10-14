@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Interface de stockage (pour faciliter les tests et l'injection)
 abstract class IStorageService {
+  Future<void> remove(String key);
   // Timer state
   Future<bool?> getIsRunning();
   Future<void> setIsRunning(bool value);
@@ -37,6 +38,11 @@ abstract class IStorageService {
 
 /// Implémentation qui utilise SharedPreferences
 class StorageService implements IStorageService {
+  @override
+  Future<void> remove(String key) async {
+    final prefs = await _prefs;
+    await prefs.remove(key);
+  }
   static const String _kIsRunningKey = 'isRunning';
   static const String _kSessionStartTimeKey = 'sessionStartTime';
   static const String _kPausedDurationKey = 'pausedDurationSeconds';

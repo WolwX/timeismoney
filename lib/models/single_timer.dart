@@ -16,6 +16,8 @@ class SingleTimer {
   String currency;
   double currentGains;
   String rateTitle;
+  String? rateIcon; // Icône emoji du préréglage
+  String? rateSourceUrl; // URL vers la source officielle du taux
   double netRatePercentage;
   double weeklyHours;
   
@@ -33,6 +35,8 @@ class SingleTimer {
     this.currency = '€',
     this.currentGains = 0.0,
     this.rateTitle = 'SMIC Français',
+    this.rateIcon = '🇫🇷', // Drapeau français par défaut
+    this.rateSourceUrl = 'https://www.service-public.fr/particuliers/vosdroits/F2300', // URL par défaut pour SMIC
     this.netRatePercentage = 77.6,
     this.weeklyHours = 35.0,
   });
@@ -73,6 +77,8 @@ class SingleTimer {
       'currency': currency,
       'currentGains': currentGains,
       'rateTitle': rateTitle,
+      'rateIcon': rateIcon,
+      'rateSourceUrl': rateSourceUrl,
       'netRatePercentage': netRatePercentage,
       'weeklyHours': weeklyHours,
     };
@@ -93,6 +99,8 @@ class SingleTimer {
       currency: json['currency'] as String? ?? '€',
       currentGains: (json['currentGains'] as num?)?.toDouble() ?? 0.0,
       rateTitle: json['rateTitle'] as String? ?? 'Taux Personnalisé',
+      rateIcon: json['rateIcon'] as String?,
+      rateSourceUrl: json['rateSourceUrl'] as String?,
       netRatePercentage: (json['netRatePercentage'] as num?)?.toDouble() ?? 77.0,
       weeklyHours: (json['weeklyHours'] as num?)?.toDouble() ?? 35.0,
     );

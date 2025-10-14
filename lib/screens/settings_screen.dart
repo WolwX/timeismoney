@@ -1,10 +1,12 @@
+import 'package:url_launcher/url_launcher.dart';
 // lib/screens/settings_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:timeismoney/providers/multi_timer_controller.dart';
-import 'package:timeismoney/models/preset_rates.dart'; 
+import 'package:timeismoney/models/preset_rates.dart';
+import 'package:timeismoney/screens/language_settings_screen.dart';
 import 'dart:async'; 
 
 // Constante pour les conversions
@@ -36,9 +38,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late FocusNode _annualNetFocus;
   late FocusNode _weeklyHoursFocus;
   // NOTE : Les champs Devise et Pourcentage Net n'ont pas besoin de FocusNode pour la synchro
-  
-  // État pour gérer la catégorie de préréglages sélectionnée
-  String? _selectedCategory;
   
   // Timer pour la fonction de debounce (temporisation)
   Timer? _debounce;
@@ -188,27 +187,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // --- Logique d'Application d'un Préréglage ---
 
-  void _applyPreset(PresetRate preset) {
-    final controller = context.read<MultiTimerController>();
-    
-    controller.setCurrency(preset.currency);
-    _currencyController.text = preset.currency;
-    
-    controller.setRateTitle(preset.title);
-    
-    // Applique le pourcentage NET/BRUT spécifique au pays
-    controller.setNetRatePercentage(preset.netRatePercentage);
-    _netRateController.text = preset.netRatePercentage.toStringAsFixed(1);
-    
-    // Applique les heures hebdomadaires spécifiques au pays
-    controller.setWeeklyHours(preset.weeklyHours);
-    _weeklyHoursController.text = preset.weeklyHours.toStringAsFixed(1);
-
-    // Applique le nouveau taux et synchronise les champs
-    _syncFieldsFromNewHourlyRate(controller, preset.rate);
-
-    Navigator.of(context).pop();
-  }
   
   // Fonction utilitaire pour regrouper les préréglages
   Map<String, List<PresetRate>> _groupPresets(List<PresetRate> presets) {
@@ -240,25 +218,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // --- Widget pour la section des paramètres en 2 colonnes ---
   Widget _buildSettingsSection(MultiTimerController controller) {
     
-    // Couleur distinctive selon l'index du timer sélectionné
-    final Color timerColor = controller.selectedTimerIndex == 0 ? Colors.cyan : Colors.orange;
-    
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: timerColor,
-          width: 2,
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ExpansionTile(
-        title: Text('⚙️ Paramètres Taux et Conversions (${controller.selectedTimer.name})'), 
-        initiallyExpanded: true, 
-        childrenPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-        children: [
-          Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
             // Ligne 1 : Taux Horaire (G) / Heures Hebdomadaires (D)
             _buildTwoColumnRow(
               leftField: TextFormField(
@@ -420,248 +382,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
             ),
-          ],
-        ),
         const SizedBox(height: 10),
         Text(
           'Base mensuelle: ${controller.selectedTimer.hoursPerMonth.toStringAsFixed(2)} heures/mois (selon vos ${controller.selectedTimer.weeklyHours.toStringAsFixed(1)}h/semaine).',
           style: const TextStyle(fontStyle: FontStyle.italic, color: Colors.white70, fontSize: 12),
         ),
-        ],
-      ),
+      ],
     );
   }
 
   // --- Widget pour la section des Préréglages ---
-
-  Widget _buildPresetsSection(Map<String, List<PresetRate>> groupedPresets) {
-    final categories = groupedPresets.keys.toList();
-    final controller = context.read<MultiTimerController>();
-
-    return ExpansionTile(
-      title: const Text('🚀 Préréglages Rapides'), 
-      initiallyExpanded: false,
-      childrenPadding: const EdgeInsets.all(8),
-      children: [
-        // ROW des ICÔNES de Catégories
-        Wrap(
-          spacing: 8.0, 
-          runSpacing: 8.0, 
-          children: categories.map((category) {
-            final isSelected = category == _selectedCategory;
-            return ActionChip(
-              avatar: Icon(
-                _categoryIcons[category] ?? Icons.category, 
-                color: isSelected ? Colors.black : Colors.white70,
-              ),
-              label: Text(category),
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.black : Colors.white,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-              backgroundColor: isSelected ? Colors.tealAccent : Colors.grey.shade800,
-              onPressed: () {
-                setState(() {
-                  _selectedCategory = isSelected ? null : category;
-                });
-              },
-            );
-          }).toList(),
-        ),
-        
-        const SizedBox(height: 20),
-
-        // Affichage des préréglages de la catégorie sélectionnée (DÉTAILLÉ)
-        if (_selectedCategory != null) 
-          ...groupedPresets[_selectedCategory]!.map((preset) {
-            final double hoursPerMonth = controller.selectedTimer.hoursPerMonth;
-            
-            // Calculs COMPLETS pour l'affichage détaillé
-            final double monthlyGross = preset.rate * hoursPerMonth;
-            final double monthlyNet = monthlyGross * controller.selectedTimer.netConversionFactor; 
-            final double annualGross = monthlyGross * monthsPerYear;
-            final double annualNet = monthlyNet * monthsPerYear;
-            
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12.0),
-              child: InkWell(
-                onTap: () => _applyPreset(preset),
-                borderRadius: BorderRadius.circular(15),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade900,
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.tealAccent.withAlpha((0.3 * 255).round()), width: 1),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Titre et icône d'application
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              preset.title, 
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const Icon(Icons.play_arrow, color: Colors.tealAccent),
-                        ],
-                      ),
-                      const Divider(color: Colors.white10),
-                      // Détail des 5 valeurs
-                      Wrap(
-                        spacing: 16.0,
-                        runSpacing: 8.0,
-                        children: [
-                          _buildPresetDetail('Horaire', '${preset.currency} ${preset.rate.toStringAsFixed(2)}', Colors.yellow),
-                          _buildPresetDetail('Mensuel Brut', '${preset.currency} ${monthlyGross.toStringAsFixed(2)}', Colors.blue),
-                          _buildPresetDetail('Mensuel Net', '${preset.currency} ${monthlyNet.toStringAsFixed(2)}', Colors.green),
-                          
-                          _buildPresetDetail('Annuel Brut', '${preset.currency} ${annualGross.toStringAsFixed(0)}', const Color.fromRGBO(129, 199, 132, 1.0)),
-                          _buildPresetDetail('Annuel Net', '${preset.currency} ${annualNet.toStringAsFixed(0)}', const Color.fromRGBO(56, 142, 60, 1.0)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-      ],
-    );
-  }
-  
-  // Petit widget utilitaire pour afficher les détails du preset
-  Widget _buildPresetDetail(String title, String value, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(fontSize: 12, color: color.withAlpha((0.7 * 255).round())),
-        ),
-        Text(
-          value,
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: color),
-        ),
-      ],
-    );
-  }
-
-
-  // --- Widget pour la section de gestion des timers ---
-  Widget _buildTimerManagementSection(MultiTimerController controller) {
-    return ExpansionTile(
-      title: const Text('⏱️ Gestion des Timers'),
-      initiallyExpanded: true,
-      childrenPadding: const EdgeInsets.all(12),
-      children: [
-        // Liste des timers
-        ...List.generate(controller.timers.length, (index) {
-          final timer = controller.timers[index];
-          final isSelected = controller.selectedTimerIndex == index;
-          
-          // Couleur distinctive selon l'index du timer
-          final Color timerColor = index == 0 ? Colors.cyan : Colors.orange;
-          
-          return Card(
-            color: isSelected ? Colors.teal.shade900 : Colors.grey.shade800,
-            margin: const EdgeInsets.only(bottom: 8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-              side: BorderSide(
-                color: timerColor,
-                width: 3,
-              ),
-            ),
-            child: ListTile(
-              leading: Icon(
-                timer.isActive ? Icons.timer : Icons.timer_off,
-                color: timer.isActive ? Colors.green : Colors.grey,
-              ),
-              title: Text(
-                timer.rateTitle,
-                style: TextStyle(
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: Colors.white,
-                ),
-              ),
-              subtitle: Text(
-                '${timer.currency} ${timer.hourlyRate.toStringAsFixed(2)}/h',
-                style: const TextStyle(color: Colors.white70),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Toggle actif/inactif
-                  Switch(
-                    value: timer.isActive,
-                    onChanged: (value) {
-                      controller.toggleTimerActive(index);
-                    },
-                    activeColor: Colors.green,
-                  ),
-                  // Bouton supprimer (seulement si plus d'un timer)
-                  if (controller.timers.length > 1)
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        _showDeleteConfirmation(context, controller, index);
-                      },
-                    ),
-                ],
-              ),
-              onTap: () {
-                controller.selectTimer(index);
-              },
-            ),
-          );
-        }),
-        
-        const SizedBox(height: 12),
-        
-        // Bouton ajouter un timer (max 2 timers)
-        if (controller.timers.length < 2)
-          ElevatedButton.icon(
-            onPressed: () {
-              _showAddTimerDialog(context, controller);
-            },
-            icon: const Icon(Icons.add),
-            label: const Text('Ajouter un Timer'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.teal,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(double.infinity, 48),
-            ),
-          )
-        else
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.orange.withAlpha((0.2 * 255).round()),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.info_outline, color: Colors.orange),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Maximum 2 timers atteint',
-                    style: TextStyle(color: Colors.orange),
-                  ),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
 
   // Dialogue pour ajouter un nouveau timer
   void _showAddTimerDialog(BuildContext context, MultiTimerController controller) {
@@ -729,34 +459,700 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final controller = context.watch<MultiTimerController>();
 
-    final groupedPresets = _groupPresets(presetRates); 
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Réglages'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            // 0. SECTION GESTION DES TIMERS
-            _buildTimerManagementSection(controller),
-            
-            const SizedBox(height: 30),
-            
-            // 1. SECTION PARAMÈTRES (2 colonnes garanties)
-            _buildSettingsSection(controller),
-            
-            const SizedBox(height: 30),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              // Ligne 1 : 3 tuiles plus petites
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSettingsTile(
+                      icon: Icons.timer,
+                      title: 'Gestion des\nTimers',
+                      color: const Color(0xFFFFD700),
+                      onTap: () => _showTimerManagementDialog(controller),
+                      isSmall: true,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSettingsTile(
+                      icon: Icons.attach_money,
+                      title: 'Taux et\nConversions',
+                      color: Colors.green,
+                      onTap: () => _showRateSettingsDialog(controller),
+                      isSmall: true,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSettingsTile(
+                      icon: Icons.language,
+                      title: 'Préférences\nGénérales',
+                      color: Colors.teal,
+                      onTap: () => _showGeneralPreferencesDialog(),
+                      isSmall: true,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Ligne 2 : 2 tuiles plus grosses
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSettingsTile(
+                      icon: Icons.star,
+                      title: 'Presets\nRapides',
+                      color: Colors.purple,
+                      onTap: () => _showPresetsDialog(controller),
+                      isSmall: false,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSettingsTile(
+                      icon: Icons.emoji_events,
+                      title: 'Presets\nFun',
+                      color: Colors.orange,
+                      onTap: () => _showFunPresetsDialog(controller),
+                      isSmall: false,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-            // 2. SECTION PRÉRÉGLAGES (Icônes et Détails)
-            _buildPresetsSection(groupedPresets),
-            
-            const SizedBox(height: 30),
+  // Widget pour une tuile cliquable
+  Widget _buildSettingsTile({
+    required IconData icon,
+    required String title,
+    required Color color,
+    required VoidCallback onTap,
+    required bool isSmall,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        height: isSmall ? 120 : 160, // Hauteur différente selon la taille
+        decoration: BoxDecoration(
+          border: Border.all(color: color, width: 2),
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              color.withOpacity(0.1),
+              color.withOpacity(0.05),
+            ],
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: isSmall ? 36 : 56, color: color), // Icône plus petite ou plus grosse
+            SizedBox(height: isSmall ? 8 : 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: isSmall ? 13 : 18,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+
+  // Dialog pour la gestion des timers
+  void _showTimerManagementDialog(MultiTimerController controller) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('🎯 Gestion des Timers'),
+        content: SingleChildScrollView(
+          child: Consumer<MultiTimerController>(
+            builder: (context, controller, _) => _buildTimerManagementContent(controller),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fermer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Dialog pour les préférences générales
+  void _showGeneralPreferencesDialog() {
+    final controller = context.read<MultiTimerController>();
+    final List<Map<String, String>> currencies = [
+      {'symbol': 'auto', 'label': 'Automatique (selon pays)'},
+      {'symbol': '€', 'label': 'Euro (€)'},
+      {'symbol': ' 24', 'label': 'Dollar US ( 24)'},
+  {'symbol': '£', 'label': 'Livre Sterling (£)'},
+  {'symbol': 'CHF', 'label': 'Franc Suisse (CHF)'},
+  {'symbol': 'A\$', 'label': 'Dollar Australien (A\$)'},
+  {'symbol': 'CA\$', 'label': 'Dollar Canadien (CA\$)'},
+  {'symbol': '¥', 'label': 'Yen Japonais (¥)'},
+  {'symbol': '₹', 'label': 'Roupie Indienne (₹)'},
+    ];
+    String? selectedCurrency = controller.preferredCurrency ?? 'auto';
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('🌍 Préférences Générales'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.language, color: Color(0xFFFFD700), size: 32),
+                title: const Text('Langue / Language'),
+                subtitle: const Text('Choisir la langue de l\'application'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LanguageSettingsScreen(),
+                    ),
+                  );
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.attach_money, color: Colors.green, size: 32),
+                title: const Text('Monnaie préférentielle'),
+                subtitle: DropdownButton<String>(
+                  value: selectedCurrency,
+                  isExpanded: true,
+                  items: currencies.map((c) => DropdownMenuItem<String>(
+                    value: c['symbol'],
+                    child: Text(c['label']!),
+                  )).toList(),
+                  onChanged: (value) async {
+                    if (value == null || value == 'auto') {
+                      await controller.setPreferredCurrency(null);
+                      selectedCurrency = 'auto';
+                    } else {
+                      await controller.setPreferredCurrency(value);
+                      selectedCurrency = value;
+                    }
+                    // Force rebuild du dialog
+                    Navigator.pop(context);
+                    _showGeneralPreferencesDialog();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fermer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Dialog pour les taux et conversions
+  void _showRateSettingsDialog(MultiTimerController controller) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                  Text('📊', style: TextStyle(fontSize: 22)),
+                SizedBox(width: 8),
+                Text('Taux et Conversions'),
+              ],
+            ),
+            // Icônes de sélection de timer (ChronoIcon)
+            if (controller.timers.length > 1)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      controller.selectTimer(0);
+                      Navigator.pop(context);
+                      _showRateSettingsDialog(controller);
+                    },
+                    child: Tooltip(
+                      message: 'Timer 1 (Or)',
+                      child: Opacity(
+                        opacity: controller.selectedTimerIndex == 0 ? 1.0 : 0.5,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                          child: SizedBox(
+                            width: 38,
+                            height: 38,
+                            child: Stack(
+                              children: [
+                                Center(
+                                  child: Icon(
+                                    Icons.timer,
+                                    color: const Color(0xFFFFD700),
+                                    size: 34,
+                                  ),
+                                ),
+                                Positioned(
+                                  right: 2,
+                                  bottom: 2,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(1.5),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.7),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Text(
+                                      '1',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        height: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      controller.selectTimer(1);
+                      Navigator.pop(context);
+                      _showRateSettingsDialog(controller);
+                    },
+                    child: Tooltip(
+                      message: 'Timer 2 (Argent)',
+                      child: Opacity(
+                        opacity: controller.selectedTimerIndex == 1 ? 1.0 : 0.5,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                          child: SizedBox(
+                            width: 38,
+                            height: 38,
+                            child: Stack(
+                              children: [
+                                Center(
+                                  child: Icon(
+                                    Icons.timer,
+                                    color: const Color(0xFFC0C0C0),
+                                    size: 34,
+                                  ),
+                                ),
+                                Positioned(
+                                  right: 2,
+                                  bottom: 2,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(1.5),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.7),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Text(
+                                      '2',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        height: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: _buildSettingsSection(controller),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fermer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Dialog pour les presets
+  void _showPresetsDialog(MultiTimerController controller) {
+    final groupedPresets = _groupPresets(presetRates);
+    // Filtrer uniquement les catégories "standards" (excluant Sport/Fun, Tech/PDG, Politique)
+    final standardCategories = Map.fromEntries(
+      groupedPresets.entries.where((entry) => 
+        entry.key != 'Sport / Fun' && 
+        entry.key != 'Tech / PDG' && 
+        entry.key != 'Politique / Dirigeants'
+      ),
+    );
+    
+    showDialog(
+      context: context,
+      builder: (context) => _PresetsDialog(
+        title: '⭐ Presets Rapides',
+        groupedPresets: standardCategories,
+        controller: controller,
+        categoryIcons: _categoryIcons,
+      ),
+    );
+  }
+
+  // Dialog pour les presets fun
+  void _showFunPresetsDialog(MultiTimerController controller) {
+    final groupedPresets = _groupPresets(presetRates);
+    // Filtrer uniquement les catégories "fun" (Sport / Fun, Tech / PDG, Politique / Dirigeants)
+    final funCategories = {
+      'Sport / Fun': groupedPresets['Sport / Fun'] ?? [],
+      'Tech / PDG': groupedPresets['Tech / PDG'] ?? [],
+      'Politique / Dirigeants': groupedPresets['Politique / Dirigeants'] ?? [],
+    };
+    
+    showDialog(
+      context: context,
+      builder: (context) => _PresetsDialog(
+        title: '🏆 Presets Fun',
+        groupedPresets: funCategories,
+        controller: controller,
+        categoryIcons: _categoryIcons,
+      ),
+    );
+  }
+
+  // Contenu de la gestion des timers (extrait de l'ancien _buildTimerManagementSection)
+  Widget _buildTimerManagementContent(MultiTimerController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ...List.generate(controller.timers.length, (index) {
+          final timer = controller.timers[index];
+          final isSelected = controller.selectedTimerIndex == index;
+          final Color timerColor = index == 0 ? const Color(0xFFFFD700) : const Color(0xFFC0C0C0);
+          return Card(
+            color: isSelected ? Colors.teal.shade900 : Colors.grey.shade800,
+            margin: const EdgeInsets.only(bottom: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(
+                color: timerColor,
+                width: 3,
+              ),
+            ),
+            child: ListTile(
+              leading: Icon(
+                timer.isActive ? Icons.timer : Icons.timer_off,
+                color: timer.isActive ? Colors.green : Colors.grey,
+              ),
+              title: Text(
+                timer.rateTitle,
+                style: TextStyle(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: Colors.white,
+                ),
+              ),
+              subtitle: Text(
+                '${timer.currency} ${timer.hourlyRate.toStringAsFixed(2)}/h',
+                style: const TextStyle(color: Colors.white70),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Switch(
+                    value: timer.isActive,
+                    onChanged: (value) {
+                      controller.toggleTimerActive(index);
+                    },
+                    activeColor: Colors.green,
+                  ),
+                  if (controller.timers.length > 1)
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _showDeleteConfirmation(context, controller, index);
+                      },
+                    ),
+                ],
+              ),
+              onTap: () {
+                controller.selectTimer(index);
+              },
+            ),
+          );
+        }),
+        const SizedBox(height: 12),
+        if (controller.timers.length < 2)
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _showAddTimerDialog(context, controller);
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Ajouter un timer'),
+          ),
+      ],
+    );
+  }
+}
+
+// Widget StatefulWidget pour les dialogs de presets (pour gérer l'état de la catégorie sélectionnée)
+class _PresetsDialog extends StatefulWidget {
+  final String title;
+  final Map<String, List<PresetRate>> groupedPresets;
+  final MultiTimerController controller;
+  final Map<String, IconData> categoryIcons;
+
+  const _PresetsDialog({
+    required this.title,
+    required this.groupedPresets,
+    required this.controller,
+    required this.categoryIcons,
+  });
+
+  @override
+  State<_PresetsDialog> createState() => _PresetsDialogState();
+}
+
+class _PresetsDialogState extends State<_PresetsDialog> {
+  void _applyPresetToTimer(PresetRate preset, int timerIndex) {
+    final int previousIndex = widget.controller.selectedTimerIndex;
+    widget.controller.selectTimer(timerIndex);
+    widget.controller.setHourlyRate(preset.rate);
+    widget.controller.setCurrency(preset.currency);
+    widget.controller.setRateTitle(preset.title);
+    widget.controller.setRateIcon(preset.icon);
+    widget.controller.setRateSourceUrl(preset.sourceUrl);
+    widget.controller.setNetRatePercentage(preset.netRatePercentage);
+    widget.controller.setWeeklyHours(preset.weeklyHours);
+    widget.controller.selectTimer(previousIndex); // Restaure la sélection initiale
+    Navigator.pop(context); // Ferme le dialog
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Préréglage "${preset.title}" appliqué au Timer ${timerIndex + 1} !')),
+    );
+  }
+
+  Widget _buildPresetDetail(String title, String value, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: TextStyle(fontSize: 12, color: color.withAlpha((0.7 * 255).round())),
+          ),
+          Text(
+            value,
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: color),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _shortUrl(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return url;
+    final host = uri.host.replaceFirst('www.', '');
+    final path = uri.pathSegments.isNotEmpty ? '/${uri.pathSegments.first}' : '';
+    return '$host$path';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: SizedBox(
+        width: 400,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: widget.groupedPresets.entries.expand((entry) {
+              final category = entry.key;
+              final presets = entry.value;
+              return [
+                Padding(
+                  padding: const EdgeInsets.only(top: 12, bottom: 4),
+                  child: Row(
+                    children: [
+                      Icon(widget.categoryIcons[category] ?? Icons.star, size: 20, color: Colors.tealAccent),
+                      const SizedBox(width: 8),
+                      Text(category, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    ],
+                  ),
+                ),
+                ...presets.map((preset) {
+                  final monthlyGross = preset.rate * 4.33 * preset.weeklyHours;
+                  final monthlyNet = monthlyGross * (preset.netRatePercentage / 100.0);
+                  final annualGross = monthlyGross * 12;
+                  final annualNet = monthlyNet * 12;
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    color: Colors.grey.shade900,
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              if (preset.icon != null) Text(preset.icon!, style: const TextStyle(fontSize: 22)),
+                              if (preset.icon != null) const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  preset.title,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              IconButton(
+                                tooltip: 'Appliquer au Timer 1',
+                                icon: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Icon(Icons.timer, color: Color(0xFFFFD700), size: 28),
+                                    Positioned(
+                                      bottom: 4, right: 4,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(1),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black,
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: const Text('1', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                onPressed: () => _applyPresetToTimer(preset, 0),
+                              ),
+                              IconButton(
+                                tooltip: 'Appliquer au Timer 2',
+                                icon: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Icon(Icons.timer, color: Color(0xFFC0C0C0), size: 28),
+                                    Positioned(
+                                      bottom: 4, right: 4,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(1),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black,
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: const Text('2', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                onPressed: () => _applyPresetToTimer(preset, 1),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          if (preset.sourceUrl != null && preset.sourceUrl!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 2.0),
+                              child: Row(
+                                children: [
+                                  const Text('Source : ', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                                  InkWell(
+                                    onTap: () async {
+                                      final url = Uri.parse(preset.sourceUrl!);
+                                      try {
+                                        await launchUrl(url);
+                                      } catch (_) {}
+                                    },
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.link, size: 15, color: Colors.tealAccent),
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          _shortUrl(preset.sourceUrl!),
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.tealAccent,
+                                            decoration: TextDecoration.underline,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          _buildPresetDetail('Horaire', '${preset.rate.toStringAsFixed(2)} ${preset.currency}/h', Colors.tealAccent),
+                          _buildPresetDetail('Mensuel Brut', '${monthlyGross.toStringAsFixed(2)} ${preset.currency}', Colors.greenAccent),
+                          _buildPresetDetail('Mensuel Net', '${monthlyNet.toStringAsFixed(2)} ${preset.currency}', Colors.green),
+                          _buildPresetDetail('Annuel Brut', '${annualGross.toStringAsFixed(2)} ${preset.currency}', Colors.yellowAccent),
+                          _buildPresetDetail('Annuel Net', '${annualNet.toStringAsFixed(2)} ${preset.currency}', Colors.yellow),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ];
+            }).toList(),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Fermer'),
+        ),
+      ],
+    );
+  }
+  // La suite du code de build doit être dans une méthode de widget, pas ici !
 }

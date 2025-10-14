@@ -8,6 +8,8 @@ class FooterBar extends StatefulWidget implements PreferredSizeWidget {
   final String? version;
   final VoidCallback? onCreatorTap;
   final bool minimal;
+  /// Si true, n'affiche que la version majeure (ex: 1.4)
+  final bool majorOnly;
 
   const FooterBar({
     Key? key,
@@ -15,6 +17,7 @@ class FooterBar extends StatefulWidget implements PreferredSizeWidget {
     this.version,
     this.onCreatorTap,
     this.minimal = false,
+    this.majorOnly = false,
   }) : super(key: key);
   @override
   State<FooterBar> createState() => _FooterBarState();
@@ -47,10 +50,22 @@ class _FooterBarState extends State<FooterBar> {
         final parts = versionLine.split(':');
         if (parts.length > 1) {
           final ver = parts.sublist(1).join(':').trim();
-          // ver is like '1.2.0+121025' -> format as 'v1.2.121025'
-          final fullVersion = ver.replaceAll('+', '.');
+          // ver est du type '1.4.0+151025'
+          String versionLabel;
+          if (widget.majorOnly) {
+            // On ne garde que les deux premiers segments (majeur.mineur)
+            final mainParts = ver.split('.');
+            if (mainParts.length >= 2) {
+              versionLabel = 'v${mainParts[0]}.${mainParts[1]}';
+            } else {
+              versionLabel = 'v$ver';
+            }
+          } else {
+            final fullVersion = ver.replaceAll('+', '.');
+            versionLabel = 'v$fullVersion';
+          }
           setState(() {
-            _versionLabel = 'v$fullVersion';
+            _versionLabel = versionLabel;
           });
           return;
         }
@@ -64,13 +79,21 @@ class _FooterBarState extends State<FooterBar> {
       final info = await PackageInfo.fromPlatform();
       final version = info.version.trim();
       final buildNumber = info.buildNumber.trim();
-      
       if (version.isNotEmpty) {
-        if (buildNumber.isNotEmpty && buildNumber != '0') {
-          setState(() => _versionLabel = 'v$version.$buildNumber');
+        String versionLabel;
+        if (widget.majorOnly) {
+          final mainParts = version.split('.');
+          if (mainParts.length >= 2) {
+            versionLabel = 'v${mainParts[0]}.${mainParts[1]}';
+          } else {
+            versionLabel = 'v$version';
+          }
+        } else if (buildNumber.isNotEmpty && buildNumber != '0') {
+          versionLabel = 'v$version.$buildNumber';
         } else {
-          setState(() => _versionLabel = 'v$version');
+          versionLabel = 'v$version';
         }
+        setState(() => _versionLabel = versionLabel);
       } else {
         setState(() => _versionLabel = 'v?.?.?');
       }

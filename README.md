@@ -5,7 +5,24 @@ Bienvenue dans **Time Is Money**, une application Flutter conçue pour visualise
 
 ---
 
-## ✨ État actuel (v1.3.0)
+
+
+## ✨ État actuel (v1.4.0)
+
+Version majeure publiée le 15/10/2025
+
+### 🆕 Nouveautés v1.4.0
+- Refonte complète de la page Réglages : navigation par tuiles (3+2), centrage vertical
+- Dialogues overlays pour chaque catégorie
+- Sélecteurs de timer visuels (chrono or/argent, numérotés)
+- Filtres avancés pour les presets (fun, rapides, etc.)
+- Affichage de la source officielle sous chaque preset (icône lien + URL cliquable)
+- UI/UX modernisée, feedback visuel
+- Corrections Flutter Web (liens), robustesse accrue
+- Système Multi-Timer : gestion de 2 timers indépendants, activation/désactivation, synchronisation, affichage dynamique
+- Correction et nettoyage du code, robustesse accrue
+
+---
 
 Voici les changements et améliorations notables présents dans la version 1.3.0 :
 

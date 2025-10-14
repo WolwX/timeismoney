@@ -15,9 +15,10 @@ class FallingCurrencyBackground extends StatefulWidget {
 
   const FallingCurrencyBackground({
     Key? key,
-    // Reduce default count to improve performance on web/dev machines
-    this.count = 30,
-    this.symbols = const ['€', r'$', '£', '¥', '₽', '₹'],
+    // Augmenté de 50 à 80 pour beaucoup plus de monnaies
+    this.count = 80,
+    // Ajout de nombreuses monnaies du monde entier : rouble, yuan, rand, naira, dirham, etc.
+    this.symbols = const ['€', r'$', '£', '¥', '₽', '₹', '₣', '₦', '₴', '₱', '฿', '₪', '₫', '₩', '₨', '₵', 'R', 'د.إ'],
     // une seule couleur or unie pour un rendu plus cohérent et "3D"
     this.colors = const [Color(0xFFFFD700)],
   }) : super(key: key);
@@ -32,6 +33,7 @@ class _Particle {
   double speed; // fraction per second
   double size; // relative to shortest side
   double rotation; // radians
+  double horizontalSpeed; // mouvement horizontal aléatoire
   String symbol;
   double opacity;
   Color color;
@@ -42,6 +44,7 @@ class _Particle {
     required this.speed,
     required this.size,
     required this.rotation,
+    required this.horizontalSpeed,
     required this.symbol,
     required this.opacity,
     required this.color,
@@ -56,7 +59,7 @@ class _FallingCurrencyBackgroundState extends State<FallingCurrencyBackground> {
   @override
   void initState() {
     super.initState();
-    _rand = Random(123456); // deterministic seed for stable visual
+    _rand = Random(); // Supprimé la seed fixe (123456) pour un vrai aléatoire
   // Use a periodic timer to update particle positions at ~8 FPS to reduce UI churn
   _timer = Timer.periodic(const Duration(milliseconds: 125), (_) => _tick());
 
@@ -68,14 +71,15 @@ class _FallingCurrencyBackgroundState extends State<FallingCurrencyBackground> {
 
   _Particle _createParticle({bool randomOffset = false}) {
     final x = _rand.nextDouble();
-    final y = randomOffset ? _rand.nextDouble() : 0.0;
-    final speed = 0.02 + _rand.nextDouble() * 0.06; // fraction per second
-    final size = 0.02 + _rand.nextDouble() * 0.06; // relative size
-    final rot = (_rand.nextDouble() * 2 - 1) * 0.6;
+    final y = randomOffset ? _rand.nextDouble() * 1.5 : (-0.1 - _rand.nextDouble() * 0.3); // Démarrage plus espacé en hauteur
+    final speed = 0.015 + _rand.nextDouble() * 0.12; // Vitesse beaucoup plus variée (0.015 à 0.135)
+    final size = 0.015 + _rand.nextDouble() * 0.08; // Tailles plus variées
+    final rot = (_rand.nextDouble() * 2 - 1) * pi; // Rotation complète (toutes directions)
+    final horizontalSpeed = (_rand.nextDouble() * 2 - 1) * 0.025; // Mouvement horizontal plus prononcé
     final sym = widget.symbols[_rand.nextInt(widget.symbols.length)];
-    final opacity = 0.35 + _rand.nextDouble() * 0.65;
+    final opacity = 0.3 + _rand.nextDouble() * 0.7;
     final color = widget.colors[_rand.nextInt(widget.colors.length)];
-    return _Particle(x: x, y: y, speed: speed, size: size, rotation: rot, symbol: sym, opacity: opacity, color: color);
+    return _Particle(x: x, y: y, speed: speed, size: size, rotation: rot, horizontalSpeed: horizontalSpeed, symbol: sym, opacity: opacity, color: color);
   }
 
   void _tick() {
@@ -85,22 +89,27 @@ class _FallingCurrencyBackgroundState extends State<FallingCurrencyBackground> {
     setState(() {
       for (var p in _particles) {
         p.y += p.speed * step;
-        p.x += (sin(p.rotation) * 0.0005); // small horizontal drift
-        p.rotation += 0.002 * (p.speed * 60);
+        // Mouvement horizontal basé sur horizontalSpeed (beaucoup plus prononcé)
+        p.x += p.horizontalSpeed * step * 1.5;
+        // Oscillation sinusoïdale plus marquée pour des trajectoires variées
+        p.x += (sin(p.rotation + p.y * 8) * 0.008);
+        // Rotation variée selon la vitesse
+        p.rotation += 0.005 * (p.speed * 60);
         if (p.y > 1.15) {
           // reset above the top with new random x
           final newP = _createParticle(randomOffset: false);
           p.x = newP.x;
-          p.y = -0.05 - _rand.nextDouble() * 0.2;
+          p.y = -0.1 - _rand.nextDouble() * 0.4; // Réinitialisation plus espacée
           p.speed = newP.speed;
           p.size = newP.size;
           p.rotation = newP.rotation;
+          p.horizontalSpeed = newP.horizontalSpeed;
           p.symbol = newP.symbol;
           p.opacity = newP.opacity;
         }
         // wrap x between 0..1
-        if (p.x < -0.2) p.x = 1.2;
-        if (p.x > 1.2) p.x = -0.2;
+        if (p.x < -0.3) p.x = 1.3;
+        if (p.x > 1.3) p.x = -0.3;
       }
     });
   }

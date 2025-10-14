@@ -1,7 +1,7 @@
 name: timeismoney
 description: Application ludique et utilitaire pour visualiser en temps réel l'argent que l'on gagne.
 publish_to: 'none'
-version: 1.3.0+141025
+version: 1.4.0+151025
 
 environment:
   sdk: '>=3.0.0 <4.0.0' 
@@ -9,14 +9,18 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations: # Pour la localisation
+    sdk: flutter
   lottie: ^2.4.0
   flutter_lints: ^2.0.0
-  intl: ^0.18.1
+  intl: ^0.20.2
   package_info_plus: ^4.0.0
 
   # Vos dépendances de packages
   provider: ^6.1.1 
-  shared_preferences: ^2.3.2 
+  shared_preferences: ^2.3.2
+  http: ^1.1.0 # Pour récupérer les taux de change
+  url_launcher: ^6.2.0 # Pour ouvrir des URLs dans le navigateur
 
   # Optional: if you want to render SVG assets directly in Flutter widgets
   flutter_svg: ^2.0.0
@@ -33,8 +37,9 @@ flutter:
   # Doit être aligné avec 'dependencies:', et indenté avec DEUX ESPACES.
   uses-material-design: true
   assets:
-    - assets/images/hourglass.svg
     - assets/images/app_icon.png
+    - assets/images/timeismoney-text-appbar.png
+    - assets/images/timeismoney-text-splash-screen.png
     - pubspec.yaml
 
 # Configuration pour la génération des icônes

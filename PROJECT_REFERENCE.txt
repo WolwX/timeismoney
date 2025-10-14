@@ -1,6 +1,6 @@
 PROJECT REFERENCE FILE
 ================================================================================
-DERNIÈRE MISE À JOUR : 14/10/2025
+DERNIÈRE MISE À JOUR : 15/10/2025
 BUT DU PROJET : Application Flutter de chronométrage financier ("Time Is Money") affichant les gains en temps réel basés sur un taux horaire paramétrable avec support multi-timer et base de données internationale de salaires minimums.
 CONTEXTE TECHNIQUE : 
     - Framework : Flutter
@@ -9,12 +9,23 @@ CONTEXTE TECHNIQUE :
     - Architecture : MVVM avec models, controllers, widgets réutilisables
 
 --------------------------------------------------------------------------------
-1. ÉTAT ACTUEL DE L'APPLICATION (V. 1.3.0)
+1. ÉTAT ACTUEL DE L'APPLICATION (V. 1.4.0)
 --------------------------------------------------------------------------------
 
 FONCTIONNALITÉS COMPLÈTES :
 
-**BASE DE DONNÉES INTERNATIONALE (NOUVEAU EN V1.3.0) :**
+**NOUVEAUTÉS MAJEURES EN V1.4.0 :**
+* Refonte complète de la page Réglages : navigation par tuiles (3+2), centrage vertical
+* Dialogues overlays pour chaque catégorie
+* Sélecteurs de timer visuels (chrono or/argent, numérotés)
+* Filtres avancés pour les presets (fun, rapides, etc.)
+* Affichage de la source officielle sous chaque preset (icône lien + URL cliquable)
+* UI/UX modernisée, feedback visuel
+* Corrections Flutter Web (liens), robustesse accrue
+* Système Multi-Timer : gestion de 2 timers indépendants, activation/désactivation, synchronisation, affichage dynamique
+* Correction et nettoyage du code, robustesse accrue
+
+**BASE DE DONNÉES INTERNATIONALE :**
 1.  **36 Pays avec Salaires Minimums Réels :**
     * Organisation géographique : Europe (14), Pays Riches (3), Amériques (6), Asie (7), Afrique (6)
     * Fourchette complète : 0.10 $/h (Venezuela) à 24.50 CHF/h (Suisse) - ratio 1:245
@@ -33,7 +44,7 @@ FONCTIONNALITÉS COMPLÈTES :
     * Affichage personnalisé : "Estimations Annuelles (Base XXh/sem.)"
     * Exemples : France 35h (1820h/an), Suisse 42h (2184h/an), Corée 52h (2704h/an)
 
-**ÉDITION MANUELLE DU TEMPS (NOUVEAU EN V1.3.0) :**
+**ÉDITION MANUELLE DU TEMPS :**
 4.  **Interface d'Édition Interactive :**
     * Clic sur l'affichage du temps (quand timer en pause) ouvre un dialogue
     * 3 champs de saisie : Heures, Minutes, Secondes

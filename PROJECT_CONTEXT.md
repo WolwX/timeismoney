@@ -1,10 +1,10 @@
 # PROJECT_CONTEXT (machine-friendly)
 
-Last updated: 2025-10-14
+Last updated: 2025-10-15
 
 ## Overview
 - **Project**: Time Is Money (Flutter app)
-- **Version**: 1.3.0 (pubspec.yaml: 1.3.0+141025)
+- **Version**: 1.4.0 (pubspec.yaml: 1.4.0+151025)
 - **Framework**: Flutter (SDK >=3.0.0)
 - **State management**: Provider (ChangeNotifier)
 - **Persistence**: SharedPreferences behind IStorageService
@@ -35,9 +35,22 @@ Last updated: 2025-10-14
   - NEW in v1.3.0: editTimerTime() to persist manual time edits
 
 ### UI Components
-- `TimerDisplay` (`lib/widgets/timer_display.dart`): Reusable timer widget
-  - Modes: compact (2 columns) and full (1 column)
-  - Fixed heights for perfect alignment
+- `TimerDisplay` (`lib/widgets/timer_display.dart`): Refonte UI/UX, widget réutilisable, modes compact (2 colonnes) et plein écran (1 colonne)
+- Page Réglages : navigation par tuiles, overlays par catégorie, gestion avancée des presets (filtres, liens sources, feedback visuel)
+- Système Multi-Timer : gestion de 2 timers indépendants, synchronisation, activation/désactivation, affichage dynamique
+# v1.4.0 (15/10/2025)
+- Refonte UI/UX complète des réglages et timers
+- Dialogues overlays, filtres avancés pour presets, liens sources
+- Système multi-timer robuste, synchronisation, feedback visuel
+- Corrections bugs, robustesse accrue, compatibilité Flutter Web
+
+- **NEW in v1.4.0**
+  - Refonte complète de la page Réglages : navigation par tuiles, dialogues overlays
+  - Sélecteurs de timer visuels (chrono or/argent, numérotés)
+  - Filtres avancés pour les presets (fun, rapides, etc.)
+  - Affichage de la source officielle sous chaque preset (icône lien + URL cliquable)
+  - UI/UX modernisée, centrage vertical, feedback visuel
+  - Corrections Flutter Web (liens), robustesse accrue
   - Color-coded borders (Timer 1: cyan, Timer 2: orange)
   - NEW in v1.3.0: 
     * Clickable time display when paused (shows edit icon ✏️)

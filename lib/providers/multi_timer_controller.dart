@@ -7,6 +7,10 @@ import 'package:timeismoney/models/single_timer.dart';
 import 'package:timeismoney/services/storage_service.dart';
 
 class MultiTimerController extends ChangeNotifier {
+  // Monnaie préférentielle (null = auto/localisation)
+  String? _preferredCurrency;
+  static const String _preferredCurrencyKey = 'preferred_currency';
+
   final IStorageService storage;
   
   List<SingleTimer> _timers = [];
@@ -18,6 +22,38 @@ class MultiTimerController extends ChangeNotifier {
       SingleTimer(id: 1, name: 'Timer 1', isActive: true),
       SingleTimer(id: 2, name: 'Timer 2', isActive: false),
     ];
+    _loadPreferredCurrency();
+  }
+  String? get preferredCurrency => _preferredCurrency;
+
+  Future<void> _loadPreferredCurrency() async {
+    final value = await storage.getString(_preferredCurrencyKey);
+    if (value != null && value.isNotEmpty) {
+      _preferredCurrency = value;
+    } else {
+      _preferredCurrency = null;
+    }
+    notifyListeners();
+  }
+
+  Future<void> setPreferredCurrency(String? currency) async {
+    _preferredCurrency = currency;
+    if (currency == null) {
+      await storage.remove(_preferredCurrencyKey);
+    } else {
+      await storage.setString(_preferredCurrencyKey, currency);
+    }
+    notifyListeners();
+  }
+
+  // Détection automatique (locale) si null
+  String getEffectivePreferredCurrency([String? fallback]) {
+    if (_preferredCurrency != null && _preferredCurrency!.isNotEmpty) {
+      return _preferredCurrency!;
+    }
+    // TODO: détecter la devise locale automatiquement (ex: selon Locale ou device)
+    // Pour l'instant, fallback à l'euro
+    return fallback ?? '€';
   }
 
   List<SingleTimer> get timers => _timers;
@@ -69,9 +105,22 @@ class MultiTimerController extends ChangeNotifier {
 
   void toggleTimerActive(int index) {
     if (index >= 0 && index < _timers.length) {
-      _timers[index].isActive = !_timers[index].isActive;
-      saveTimers();
-      notifyListeners();
+      final timer = _timers[index];
+      if (timer.isActive) {
+        // Toujours autoriser la désactivation
+        timer.isActive = false;
+        saveTimers();
+        notifyListeners();
+      } else {
+        // Activer seulement si moins de 2 timers actifs
+        final activeCount = _timers.where((t) => t.isActive).length;
+        if (activeCount < 2) {
+          timer.isActive = true;
+          saveTimers();
+          notifyListeners();
+        }
+        // Sinon, ne rien faire (ou afficher un message si besoin)
+      }
     }
   }
 
@@ -269,6 +318,18 @@ class MultiTimerController extends ChangeNotifier {
 
   void setRateTitle(String title) {
     selectedTimer.rateTitle = title;
+    saveTimers();
+    notifyListeners();
+  }
+
+  void setRateIcon(String? icon) {
+    selectedTimer.rateIcon = icon;
+    saveTimers();
+    notifyListeners();
+  }
+
+  void setRateSourceUrl(String? url) {
+    selectedTimer.rateSourceUrl = url;
     saveTimers();
     notifyListeners();
   }
