@@ -139,7 +139,9 @@ Afrique : Afrique du Sud, Maroc, Kenya, Égypte, Nigeria
 
 ### Notes sur la version
 
-
+- La version affichée dans le footer provient dynamiquement du `pubspec.yaml`
+- Format : `v1.4.1.151025` (version.buildNumber, affichage dynamique depuis pubspec.yaml)
+- Le build number suit le format DDMMYY (date de release)
 
 ## 🚀 Fonctionnalités à venir
 

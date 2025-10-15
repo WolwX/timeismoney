@@ -52,10 +52,17 @@ class HomeScreen extends StatelessWidget {
                   // Titre avec image personnalisée (remplace le texte 3D)
                   Expanded(
                     child: Center(
-                      child: Image.asset(
-                        'assets/images/timeismoney-text-appbar.png',
-                        height: 32, // Réduit de 40 à 32 (-20%)
-                        fit: BoxFit.contain,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          double maxWidth = constraints.maxWidth;
+                          double imageWidth = maxWidth > 400 ? 350 : maxWidth * 0.85;
+                          return Image.asset(
+                            'assets/images/timeismoney-text-appbar.png',
+                            height: 32,
+                            width: imageWidth,
+                            fit: BoxFit.contain,
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -97,7 +104,7 @@ class HomeScreen extends StatelessWidget {
                     ? _buildSingleTimerView(controller, activeTimers[0], 0)
                     : _buildMultiTimerView(controller, activeTimers),
           ),
-          const FooterBar(creatorName: 'XR'),
+          FooterBar(creatorName: 'XR'),
         ],
       ),
     );
