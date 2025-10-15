@@ -9,7 +9,7 @@ CONTEXTE TECHNIQUE :
     - Architecture : MVVM avec models, controllers, widgets réutilisables
 
 --------------------------------------------------------------------------------
-1. ÉTAT ACTUEL DE L'APPLICATION (V. 1.4.1)
+1. ÉTAT ACTUEL DE L'APPLICATION (V. 1.4.1, pubspec.yaml: 1.4.1+151025)
 --------------------------------------------------------------------------------
 
 FONCTIONNALITÉS COMPLÈTES :

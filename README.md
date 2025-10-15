@@ -139,18 +139,11 @@ Afrique : Afrique du Sud, Maroc, Kenya, Égypte, Nigeria
 
 ### Notes sur la version
 
-- La version affichée dans le footer provient directement du `pubspec.yaml`
-- Format : `v1.4.1.151025` (version.buildNumber)
-- Le build number suit le format DDMMYY (date de release)
 
----
 
 ## 🚀 Fonctionnalités à venir
 
 ### Priorité 1 : Import/Export de Configurations
-- Sauvegarde des réglages d'un timer dans un fichier
-- Import de configurations sauvegardées
-- Partage de configurations entre appareils
 
 ### Priorité 2 : Historique des Sessions
 - Modèle `Session` pour enregistrer les sessions de travail

@@ -51,7 +51,7 @@ Last updated: 2025-10-15
   - Voir CHANGELOG.txt pour l’historique complet
 - `FooterBar` (`lib/widgets/footer_bar.dart`): Version display
   - Reads version from pubspec.yaml → PackageInfo fallback
-  - Format: v1.3.0.141025
+  - Format: v1.4.1.151025
 
 ### Screens
 - `SplashScreen`: Animated hourglass intro
