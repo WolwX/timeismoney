@@ -7,11 +7,15 @@ Bienvenue dans **Time Is Money**, une application Flutter conçue pour visualise
 
 
 
-## ✨ État actuel (v1.4.0)
+## ✨ État actuel (v1.4.1)
 
-Version majeure publiée le 15/10/2025
+Version mineure publiée le 15/10/2025
 
-### 🆕 Nouveautés v1.4.0
+### 🆕 Nouveautés v1.4.1
+#### (voir CHANGELOG.txt pour détails)
+
+- Affichage des presets par catégorie sous forme de menu accordéon (ExpansionPanelList)
+- Amélioration de l’ergonomie des dialogues de presets
 - Refonte complète de la page Réglages : navigation par tuiles (3+2), centrage vertical
 - Dialogues overlays pour chaque catégorie
 - Sélecteurs de timer visuels (chrono or/argent, numérotés)
@@ -24,7 +28,7 @@ Version majeure publiée le 15/10/2025
 
 ---
 
-Voici les changements et améliorations notables présents dans la version 1.3.0 :
+Voici les changements et améliorations notables présents dans la version 1.4.0 :
 
 ### 🌍 Base de Données Internationale (NOUVEAU)
 - **36 pays** avec salaires minimums réels organisés par continent
@@ -83,7 +87,7 @@ Voici les changements et améliorations notables présents dans la version 1.3.0
 
 ---
 
-## 🌐 Pays Disponibles (v1.3.0)
+## 🌐 Pays Disponibles (v1.4.1)
 
 ### 💎 Top 5 Pays Riches (Salaire Minimum)
 1. **Suisse** : 24.50 CHF/h (88% NET, 42h/sem)
@@ -136,7 +140,7 @@ Afrique : Afrique du Sud, Maroc, Kenya, Égypte, Nigeria
 ### Notes sur la version
 
 - La version affichée dans le footer provient directement du `pubspec.yaml`
-- Format : `v1.3.0.141025` (version.buildNumber)
+- Format : `v1.4.1.151025` (version.buildNumber)
 - Le build number suit le format DDMMYY (date de release)
 
 ---

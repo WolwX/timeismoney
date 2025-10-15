@@ -9,21 +9,16 @@ CONTEXTE TECHNIQUE :
     - Architecture : MVVM avec models, controllers, widgets réutilisables
 
 --------------------------------------------------------------------------------
-1. ÉTAT ACTUEL DE L'APPLICATION (V. 1.4.0)
+1. ÉTAT ACTUEL DE L'APPLICATION (V. 1.4.1)
 --------------------------------------------------------------------------------
 
 FONCTIONNALITÉS COMPLÈTES :
 
-**NOUVEAUTÉS MAJEURES EN V1.4.0 :**
-* Refonte complète de la page Réglages : navigation par tuiles (3+2), centrage vertical
-* Dialogues overlays pour chaque catégorie
-* Sélecteurs de timer visuels (chrono or/argent, numérotés)
-* Filtres avancés pour les presets (fun, rapides, etc.)
-* Affichage de la source officielle sous chaque preset (icône lien + URL cliquable)
-* UI/UX modernisée, feedback visuel
-* Corrections Flutter Web (liens), robustesse accrue
-* Système Multi-Timer : gestion de 2 timers indépendants, activation/désactivation, synchronisation, affichage dynamique
-* Correction et nettoyage du code, robustesse accrue
+
+**NOUVEAUTÉS MAJEURES EN V1.4.1 :**
+* Affichage des presets par catégorie sous forme de menu accordéon (ExpansionPanelList)
+* Amélioration de l’ergonomie des dialogues de presets (espacement, compacité)
+* Correction de détails visuels sur les dialogues de réglages
 
 **BASE DE DONNÉES INTERNATIONALE :**
 1.  **36 Pays avec Salaires Minimums Réels :**

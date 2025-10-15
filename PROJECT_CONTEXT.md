@@ -4,7 +4,7 @@ Last updated: 2025-10-15
 
 ## Overview
 - **Project**: Time Is Money (Flutter app)
-- **Version**: 1.4.0 (pubspec.yaml: 1.4.0+151025)
+- **Version**: 1.4.1 (pubspec.yaml: 1.4.1+151025)
 - **Framework**: Flutter (SDK >=3.0.0)
 - **State management**: Provider (ChangeNotifier)
 - **Persistence**: SharedPreferences behind IStorageService
@@ -38,27 +38,17 @@ Last updated: 2025-10-15
 - `TimerDisplay` (`lib/widgets/timer_display.dart`): Refonte UI/UX, widget réutilisable, modes compact (2 colonnes) et plein écran (1 colonne)
 - Page Réglages : navigation par tuiles, overlays par catégorie, gestion avancée des presets (filtres, liens sources, feedback visuel)
 - Système Multi-Timer : gestion de 2 timers indépendants, synchronisation, activation/désactivation, affichage dynamique
-# v1.4.0 (15/10/2025)
+# v1.4.1 (15/10/2025)
 - Refonte UI/UX complète des réglages et timers
 - Dialogues overlays, filtres avancés pour presets, liens sources
 - Système multi-timer robuste, synchronisation, feedback visuel
 - Corrections bugs, robustesse accrue, compatibilité Flutter Web
 
-- **NEW in v1.4.0**
-  - Refonte complète de la page Réglages : navigation par tuiles, dialogues overlays
-  - Sélecteurs de timer visuels (chrono or/argent, numérotés)
-  - Filtres avancés pour les presets (fun, rapides, etc.)
-  - Affichage de la source officielle sous chaque preset (icône lien + URL cliquable)
-  - UI/UX modernisée, centrage vertical, feedback visuel
-  - Corrections Flutter Web (liens), robustesse accrue
-  - Color-coded borders (Timer 1: cyan, Timer 2: orange)
-  - NEW in v1.3.0: 
-    * Clickable time display when paused (shows edit icon ✏️)
-    * _showEditTimeDialog() for manual time entry (hours:minutes:seconds)
-    * onTimeEdited callback to trigger persistence
-    * Dynamic "Base XXh/sem." display instead of fixed "Base 35h/sem."
-    * Dynamic calculations: hoursPerMonth = (weeklyHours × 52) / 12, hoursPerYear = weeklyHours × 52
-  
+- **NEW in v1.4.1**
+  - Affichage des presets par catégorie sous forme de menu accordéon (ExpansionPanelList)
+  - Amélioration de l’ergonomie des dialogues de presets (espacement, compacité)
+  - Correction de détails visuels sur les dialogues de réglages
+  - Voir CHANGELOG.txt pour l’historique complet
 - `FooterBar` (`lib/widgets/footer_bar.dart`): Version display
   - Reads version from pubspec.yaml → PackageInfo fallback
   - Format: v1.3.0.141025
