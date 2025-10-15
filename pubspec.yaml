@@ -1,7 +1,7 @@
 name: timeismoney
 description: Application ludique et utilitaire pour visualiser en temps réel l'argent que l'on gagne.
 publish_to: 'none'
-version: 1.4.0+151025
+version: 1.4.1+151025
 
 environment:
   sdk: '>=3.0.0 <4.0.0' 
