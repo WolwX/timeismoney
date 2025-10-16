@@ -7,24 +7,20 @@ Bienvenue dans **Time Is Money**, une application Flutter conçue pour visualise
 
 
 
-## ✨ État actuel (v1.4.1)
+## ✨ État actuel (v1.4.2)
 
-Version mineure publiée le 15/10/2025
+Version mineure publiée le 16/10/2025
 
-### 🆕 Nouveautés v1.4.1
+### 🆕 Nouveautés v1.4.2
 #### (voir CHANGELOG.txt pour détails)
 
-- Affichage des presets par catégorie sous forme de menu accordéon (ExpansionPanelList)
-- Amélioration de l’ergonomie des dialogues de presets
-- Refonte complète de la page Réglages : navigation par tuiles (3+2), centrage vertical
-- Dialogues overlays pour chaque catégorie
-- Sélecteurs de timer visuels (chrono or/argent, numérotés)
-- Filtres avancés pour les presets (fun, rapides, etc.)
-- Affichage de la source officielle sous chaque preset (icône lien + URL cliquable)
-- UI/UX modernisée, feedback visuel
-- Corrections Flutter Web (liens), robustesse accrue
-- Système Multi-Timer : gestion de 2 timers indépendants, activation/désactivation, synchronisation, affichage dynamique
-- Correction et nettoyage du code, robustesse accrue
+- **Mode Minuteur Révolutionnaire** : Comptage à rebours avec montant cible configurable
+- Affichage du temps restant en format dynamique (2 lignes avec heures)
+- Édition du montant cible via dialogue pop-up (comme l'édition du temps)
+- Bouton de switch mode désactivé visuellement quand timer actif
+- Édition du montant cible accessible sur toute la zone (pas seulement l'icône)
+- Bordure du timer quasi-invisible (0.01px) pour effet minimaliste
+- Effet de bordure navigante légèrement augmenté pour meilleure visibilité
 
 ---
 
@@ -45,6 +41,16 @@ Voici les changements et améliorations notables présents dans la version 1.4.0
 - **Icône d'édition** visible uniquement sur timers arrêtés
 - **Recalcul automatique** des gains après modification
 - **Persistence immédiate** dans le stockage
+
+### ⏰ Mode Minuteur Révolutionnaire (NOUVEAU)
+- **Comptage à rebours** avec montant cible configurable
+- **Affichage du temps restant** en format dynamique (2 lignes avec heures)
+- **Édition du montant cible** via dialogue pop-up (comme l'édition du temps)
+- **Icône sablier distinctive** et couleurs adaptées (ambre)
+- **Calcul automatique** du temps nécessaire basé sur le taux horaire
+- **Passage fluide** entre mode chrono (montée) et mode minuteur (descente)
+- **Zone d'édition étendue** : clic sur tout le champ pour ouvrir le dialogue
+- **Bouton de switch désactivé** visuellement quand timer actif
 
 ### 📊 Calculs Dynamiques par Pays (NOUVEAU)
 - **Estimations basées sur heures réelles** : plus de valeur fixe 35h/sem

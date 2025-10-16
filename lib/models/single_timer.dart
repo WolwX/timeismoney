@@ -7,11 +7,11 @@ class SingleTimer {
   String name;
   bool isActive;
   bool isRunning;
-  
+
   Duration elapsedDuration;
   Duration pausedDuration;
   DateTime? sessionStartTime;
-  
+
   double hourlyRate;
   String currency;
   double currentGains;
@@ -20,7 +20,11 @@ class SingleTimer {
   String? rateSourceUrl; // URL vers la source officielle du taux
   double netRatePercentage;
   double weeklyHours;
-  
+
+  // Mode timer inversé
+  bool isReverseMode;
+  double? targetAmount;
+
   Timer? internalTimer;
 
   SingleTimer({
@@ -39,6 +43,8 @@ class SingleTimer {
     this.rateSourceUrl = 'https://www.service-public.fr/particuliers/vosdroits/F2300', // URL par défaut pour SMIC
     this.netRatePercentage = 77.6,
     this.weeklyHours = 35.0,
+    this.isReverseMode = false,
+    this.targetAmount,
   });
 
   double get hoursPerMonth => (weeklyHours * 52) / 12;
@@ -48,6 +54,19 @@ class SingleTimer {
     final double totalSeconds = elapsedDuration.inSeconds.toDouble();
     final double gainPerSecond = hourlyRate / 3600.0;
     currentGains = totalSeconds * gainPerSecond;
+  }
+
+  /// Pour le mode inversé : calcule le temps restant avant d'atteindre le montant cible
+  Duration? getRemainingTime() {
+    if (!isReverseMode || targetAmount == null || hourlyRate <= 0) return null;
+    // Utilise le taux horaire net pour le calcul
+    final double netHourlyRate = hourlyRate * netConversionFactor;
+    final double gainPerSecond = netHourlyRate / 3600.0;
+    final double secondsNeeded = targetAmount! / gainPerSecond;
+    final double secondsElapsed = elapsedDuration.inSeconds.toDouble();
+    final double secondsLeft = secondsNeeded - secondsElapsed;
+    if (secondsLeft <= 0) return Duration.zero;
+    return Duration(seconds: secondsLeft.round());
   }
 
   void recalculateTime() {
@@ -81,6 +100,8 @@ class SingleTimer {
       'rateSourceUrl': rateSourceUrl,
       'netRatePercentage': netRatePercentage,
       'weeklyHours': weeklyHours,
+      'isReverseMode': isReverseMode,
+      'targetAmount': targetAmount,
     };
   }
 
@@ -103,6 +124,8 @@ class SingleTimer {
       rateSourceUrl: json['rateSourceUrl'] as String?,
       netRatePercentage: (json['netRatePercentage'] as num?)?.toDouble() ?? 77.0,
       weeklyHours: (json['weeklyHours'] as num?)?.toDouble() ?? 35.0,
+      isReverseMode: json['isReverseMode'] as bool? ?? false,
+      targetAmount: (json['targetAmount'] as num?)?.toDouble(),
     );
   }
 }

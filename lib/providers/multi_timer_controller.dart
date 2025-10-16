@@ -7,12 +7,60 @@ import 'package:timeismoney/models/single_timer.dart';
 import 'package:timeismoney/services/storage_service.dart';
 
 class MultiTimerController extends ChangeNotifier {
+  // Définit le montant cible du minuteur et calcule la durée cible automatiquement
+  void setMinuteurTargetAmount(int index, double targetAmount) {
+    if (index < 0 || index >= _timers.length) return;
+    final timer = _timers[index];
+    timer.targetAmount = targetAmount;
+    // En mode minuteur, remettre le temps écoulé à 0 pour recommencer le compte à rebours
+    if (timer.isReverseMode) {
+      timer.elapsedDuration = Duration.zero;
+      timer.pausedDuration = Duration.zero;
+      timer.currentGains = 0.0;
+      timer.sessionStartTime = null;
+      if (timer.isRunning) {
+        timer.internalTimer?.cancel();
+        timer.isRunning = false;
+      }
+    }
+    saveTimers();
+    notifyListeners();
+  }
+  // Définit la durée cible du minuteur pour le timer donné
+  void setMinuteurTargetTime(int index, Duration targetDuration) {
+    if (index < 0 || index >= _timers.length) return;
+    final timer = _timers[index];
+    // Calcule le montant cible à partir du temps cible et du taux horaire
+    final double gainPerSecond = timer.hourlyRate / 3600.0;
+    timer.targetAmount = targetDuration.inSeconds * gainPerSecond;
+    saveTimers();
+    notifyListeners();
+  }
+  // Définit le montant gagné actuel pour un timer
+  void setCurrentGains(int index, double currentGains) {
+    if (index < 0 || index >= _timers.length) return;
+    final timer = _timers[index];
+    timer.currentGains = currentGains;
+    saveTimers();
+    notifyListeners();
+  }
+  // Active/désactive le mode minuteur (timer inversé) pour le timer donné
+  void toggleMinuteurMode(int index) {
+    if (index < 0 || index >= _timers.length) return;
+    final timer = _timers[index];
+    timer.isReverseMode = !timer.isReverseMode;
+    // Conserver les valeurs targetAmount et elapsedDuration même en changeant de mode
+    saveTimers();
+    notifyListeners();
+  }
+  // Monnaie préférentielle (null = auto/localisation)
+  // Only keep the first set of fields, getters, and methods. Remove all duplicates below this point.
   // Monnaie préférentielle (null = auto/localisation)
   String? _preferredCurrency;
   static const String _preferredCurrencyKey = 'preferred_currency';
 
-  final IStorageService storage;
-  
+  final StorageService storage;
+
   List<SingleTimer> _timers = [];
   int _selectedTimerIndex = 0;
 
@@ -24,7 +72,15 @@ class MultiTimerController extends ChangeNotifier {
     ];
     _loadPreferredCurrency();
   }
+
+  Future<void> init() async {
+    await loadTimers();
+  }
   String? get preferredCurrency => _preferredCurrency;
+  List<SingleTimer> get timers => _timers;
+  List<SingleTimer> get activeTimers => _timers.where((t) => t.isActive).toList();
+  int get selectedTimerIndex => _selectedTimerIndex;
+  SingleTimer get selectedTimer => _timers[_selectedTimerIndex];
 
   Future<void> _loadPreferredCurrency() async {
     final value = await storage.getString(_preferredCurrencyKey);
@@ -56,14 +112,6 @@ class MultiTimerController extends ChangeNotifier {
     return fallback ?? '€';
   }
 
-  List<SingleTimer> get timers => _timers;
-  List<SingleTimer> get activeTimers => _timers.where((t) => t.isActive).toList();
-  int get selectedTimerIndex => _selectedTimerIndex;
-  SingleTimer get selectedTimer => _timers[_selectedTimerIndex];
-
-  Future<void> init() async {
-    await loadTimers();
-  }
 
   // Persistence
   Future<void> saveTimers() async {
@@ -289,6 +337,12 @@ class MultiTimerController extends ChangeNotifier {
     timer.internalTimer?.cancel();
     timer.internalTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       timer.recalculateTime();
+      
+      // Vérifier si en mode minuteur, le temps restant est écoulé
+      if (timer.isReverseMode && timer.getRemainingTime() != null && timer.getRemainingTime()!.inSeconds <= 0) {
+        stopTimer(timer.id);
+      }
+      
       notifyListeners();
     });
   }

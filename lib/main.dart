@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:timeismoney/providers/multi_timer_controller.dart';
 import 'package:timeismoney/providers/locale_provider.dart';
 import 'package:timeismoney/services/storage_service.dart';
+import 'package:timeismoney/services/time_sync_service.dart';
 import 'package:timeismoney/l10n/app_localizations.dart';
 // Import du nouveau Splash Screen
 import 'package:timeismoney/screens/splash_screen.dart'; 
@@ -17,11 +18,16 @@ Future<void> main() async {
   final controller = MultiTimerController(storage: storage);
   await controller.init();
 
+  // Initialisation du service de synchronisation du temps
+  final timeSyncService = TimeSyncService();
+  await timeSyncService.fetchNetworkDateTime();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<MultiTimerController>.value(value: controller),
         ChangeNotifierProvider<LocaleProvider>(create: (_) => LocaleProvider()),
+        Provider<TimeSyncService>.value(value: timeSyncService),
       ],
       child: const TimeIsMoneyApp(),
     ),
