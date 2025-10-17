@@ -48,8 +48,27 @@ class MultiTimerController extends ChangeNotifier {
   void toggleMinuteurMode(int index) {
     if (index < 0 || index >= _timers.length) return;
     final timer = _timers[index];
+    
+    // Sauvegarder l'état actuel du timer avant de changer de mode
+    final wasRunning = timer.isRunning;
+    if (wasRunning) {
+      timer.internalTimer?.cancel();
+      timer.isRunning = false;
+      timer.recalculateTime();
+      timer.pausedDuration = timer.elapsedDuration;
+      timer.sessionStartTime = null;
+    }
+    
+    // Changer de mode
     timer.isReverseMode = !timer.isReverseMode;
-    // Conserver les valeurs targetAmount et elapsedDuration même en changeant de mode
+    
+    // Restaurer l'état du timer dans le nouveau mode
+    if (wasRunning) {
+      timer.isRunning = true;
+      timer.sessionStartTime = DateTime.now();
+      _startInternalTimer(timer);
+    }
+    
     saveTimers();
     notifyListeners();
   }

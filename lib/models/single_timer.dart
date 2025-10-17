@@ -8,8 +8,33 @@ class SingleTimer {
   bool isActive;
   bool isRunning;
 
-  Duration elapsedDuration;
-  Duration pausedDuration;
+  // Time tracking for normal mode (chrono)
+  Duration normalElapsedDuration;
+  Duration normalPausedDuration;
+  
+  // Time tracking for timer mode (minuteur)
+  Duration timerElapsedDuration;
+  Duration timerPausedDuration;
+
+  // Current mode time (points to the appropriate mode's duration)
+  Duration get elapsedDuration => isReverseMode ? timerElapsedDuration : normalElapsedDuration;
+  set elapsedDuration(Duration value) {
+    if (isReverseMode) {
+      timerElapsedDuration = value;
+    } else {
+      normalElapsedDuration = value;
+    }
+  }
+
+  Duration get pausedDuration => isReverseMode ? timerPausedDuration : normalPausedDuration;
+  set pausedDuration(Duration value) {
+    if (isReverseMode) {
+      timerPausedDuration = value;
+    } else {
+      normalPausedDuration = value;
+    }
+  }
+
   DateTime? sessionStartTime;
 
   double hourlyRate;
@@ -32,8 +57,10 @@ class SingleTimer {
     required this.name,
     this.isActive = true,
     this.isRunning = false,
-    this.elapsedDuration = Duration.zero,
-    this.pausedDuration = Duration.zero,
+    this.normalElapsedDuration = Duration.zero,
+    this.normalPausedDuration = Duration.zero,
+    this.timerElapsedDuration = Duration.zero,
+    this.timerPausedDuration = Duration.zero,
     this.sessionStartTime,
     this.hourlyRate = 11.88,
     this.currency = '€',
@@ -89,8 +116,10 @@ class SingleTimer {
       'name': name,
       'isActive': isActive,
       'isRunning': isRunning,
-      'elapsedDurationSeconds': elapsedDuration.inSeconds,
-      'pausedDurationSeconds': pausedDuration.inSeconds,
+      'normalElapsedDurationSeconds': normalElapsedDuration.inSeconds,
+      'normalPausedDurationSeconds': normalPausedDuration.inSeconds,
+      'timerElapsedDurationSeconds': timerElapsedDuration.inSeconds,
+      'timerPausedDurationSeconds': timerPausedDuration.inSeconds,
       'sessionStartTime': sessionStartTime?.toIso8601String(),
       'hourlyRate': hourlyRate,
       'currency': currency,
@@ -111,8 +140,10 @@ class SingleTimer {
       name: json['name'] as String,
       isActive: json['isActive'] as bool? ?? true,
       isRunning: json['isRunning'] as bool? ?? false,
-      elapsedDuration: Duration(seconds: json['elapsedDurationSeconds'] as int? ?? 0),
-      pausedDuration: Duration(seconds: json['pausedDurationSeconds'] as int? ?? 0),
+      normalElapsedDuration: Duration(seconds: json['normalElapsedDurationSeconds'] as int? ?? json['elapsedDurationSeconds'] as int? ?? 0),
+      normalPausedDuration: Duration(seconds: json['normalPausedDurationSeconds'] as int? ?? json['pausedDurationSeconds'] as int? ?? 0),
+      timerElapsedDuration: Duration(seconds: json['timerElapsedDurationSeconds'] as int? ?? 0),
+      timerPausedDuration: Duration(seconds: json['timerPausedDurationSeconds'] as int? ?? 0),
       sessionStartTime: json['sessionStartTime'] != null 
           ? DateTime.tryParse(json['sessionStartTime'] as String)
           : null,
