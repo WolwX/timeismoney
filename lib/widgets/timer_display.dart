@@ -708,7 +708,7 @@ class _TimerDisplayState extends State<TimerDisplay> with SingleTickerProviderSt
             ],
             border: Border.all(
               color: timerColor,
-              width: 0.01, // Bordure quasi-invisible
+              width: 0.5, // Bordure de 0.5 pixels
             ),
           ),
           padding: const EdgeInsets.all(1.0), // Bordure légèrement plus visible
