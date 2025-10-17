@@ -3,12 +3,75 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:timeismoney/providers/multi_timer_controller.dart';
-import 'package:timeismoney/screens/settings_screen.dart'; 
+import 'package:timeismoney/screens/settings_screen.dart';
 import 'package:timeismoney/widgets/footer_bar.dart';
 import 'package:timeismoney/widgets/timer_display.dart';
+import 'package:timeismoney/widgets/celebration_animation.dart';
+import 'package:timeismoney/services/celebration_manager.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  bool _showCelebration = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    // Écouter les changements du CelebrationManager
+    final celebrationManager = context.read<CelebrationManager>();
+    celebrationManager.addListener(_onCelebrationChanged);
+  }
+
+  @override
+  void dispose() {
+    final celebrationManager = context.read<CelebrationManager>();
+    celebrationManager.removeListener(_onCelebrationChanged);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // Quand l'app revient au premier plan, vérifier s'il y a des célébrations en attente
+    if (state == AppLifecycleState.resumed) {
+      final celebrationManager = context.read<CelebrationManager>();
+      if (celebrationManager.hasPendingCelebrations && !_showCelebration) {
+        _triggerCelebration();
+      }
+    }
+  }
+
+  void _onCelebrationChanged() {
+    final celebrationManager = context.read<CelebrationManager>();
+    if (celebrationManager.hasPendingCelebrations && !_showCelebration) {
+      _triggerCelebration();
+    }
+  }
+
+  void _triggerCelebration() {
+    setState(() {
+      _showCelebration = true;
+    });
+  }
+
+  void _onCelebrationComplete() {
+    setState(() {
+      _showCelebration = false;
+    });
+
+    // Consommer la célébration terminée
+    final celebrationManager = context.read<CelebrationManager>();
+    celebrationManager.consumeNextCelebration();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +111,7 @@ class HomeScreen extends StatelessWidget {
                     height: 48,
                   ),
                   const SizedBox(width: 12),
-                  
+
                   // Titre avec image personnalisée (remplace le texte 3D)
                   Expanded(
                     child: Center(
@@ -66,7 +129,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  
+
                   // Bouton Settings à droite
                   Container(
                     decoration: BoxDecoration(
@@ -95,16 +158,25 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: activeTimers.isEmpty
-                ? _buildNoTimersView()
-                : activeTimers.length == 1
-                    ? _buildSingleTimerView(controller, activeTimers[0], 0)
-                    : _buildMultiTimerView(controller, activeTimers),
+          Column(
+            children: [
+              Expanded(
+                child: activeTimers.isEmpty
+                    ? _buildNoTimersView()
+                    : activeTimers.length == 1
+                        ? _buildSingleTimerView(controller, activeTimers[0], 0)
+                        : _buildMultiTimerView(controller, activeTimers),
+              ),
+              FooterBar(creatorName: 'XR'),
+            ],
           ),
-          FooterBar(creatorName: 'XR'),
+          // Animation de célébration en overlay
+          if (_showCelebration)
+            CelebrationAnimation(
+              onAnimationComplete: _onCelebrationComplete,
+            ),
         ],
       ),
     );

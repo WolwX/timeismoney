@@ -634,6 +634,40 @@ class _TimerDisplayState extends State<TimerDisplay> with SingleTickerProviderSt
     return '${widget.timer.currency} ${amount.toStringAsFixed(2)}';
   }
 
+  // Méthode pour déterminer la couleur de la bordure
+  Color _getBorderColor(Color timerColor) {
+    // En mode minuteur, si le timer est arrivé à 0, bordure rouge
+    if (widget.timer.isReverseMode) {
+      final remainingTime = widget.timer.getRemainingTime();
+      final shouldStop = remainingTime == null || 
+                        remainingTime.inSeconds <= 0 || 
+                        (widget.timer.targetAmount != null && widget.timer.currentGains >= widget.timer.targetAmount!);
+      
+      if (shouldStop) {
+        return Colors.red; // Bordure rouge quand arrivé à 0
+      }
+    }
+    
+    return timerColor; // Couleur normale sinon
+  }
+
+  // Méthode pour déterminer la largeur de la bordure
+  double _getBorderWidth() {
+    // En mode minuteur, si le timer est arrivé à 0, bordure de 0.5 pixel
+    if (widget.timer.isReverseMode) {
+      final remainingTime = widget.timer.getRemainingTime();
+      final shouldStop = remainingTime == null || 
+                        remainingTime.inSeconds <= 0 || 
+                        (widget.timer.targetAmount != null && widget.timer.currentGains >= widget.timer.targetAmount!);
+      
+      if (shouldStop) {
+        return 0.5; // Bordure plus épaisse quand arrivé à 0
+      }
+    }
+    
+    return 0.2; // Largeur normale sinon
+  }
+
   @override
   Widget build(BuildContext context) {
     // Récupère la monnaie préférentielle si disponible (Provider)
@@ -707,8 +741,8 @@ class _TimerDisplayState extends State<TimerDisplay> with SingleTickerProviderSt
               ),
             ],
             border: Border.all(
-              color: timerColor,
-              width: 0.2, // Bordure de 0.2 pixels
+              color: _getBorderColor(timerColor),
+              width: _getBorderWidth(),
             ),
           ),
           padding: const EdgeInsets.all(1.0), // Bordure légèrement plus visible

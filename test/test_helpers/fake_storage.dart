@@ -56,4 +56,37 @@ class FakeStorage implements IStorageService {
 
   @override
   Future<void> setString(String key, String value) async => _data[key] = value;
+
+  @override
+  Future<bool?> getNotificationsEnabled() async => _data['notificationsEnabled'] as bool? ?? true;
+
+  @override
+  Future<void> setNotificationsEnabled(bool enabled) async => _data['notificationsEnabled'] = enabled;
+
+  @override
+  Future<bool?> getTimerFinishedNotificationsEnabled() async => _data['timerFinishedNotificationsEnabled'] as bool? ?? true;
+
+  @override
+  Future<void> setTimerFinishedNotificationsEnabled(bool enabled) async => _data['timerFinishedNotificationsEnabled'] = enabled;
+
+  @override
+  Future<bool?> getGainMilestoneNotificationsEnabled() async => _data['gainMilestoneNotificationsEnabled'] as bool? ?? true;
+
+  @override
+  Future<void> setGainMilestoneNotificationsEnabled(bool enabled) async => _data['gainMilestoneNotificationsEnabled'] = enabled;
+
+  @override
+  Future<bool?> getHourlyNotificationsEnabled() async => _data['hourlyNotificationsEnabled'] as bool? ?? false;
+
+  @override
+  Future<void> setHourlyNotificationsEnabled(bool enabled) async => _data['hourlyNotificationsEnabled'] = enabled;
+
+  @override
+  Future<bool?> getCelebrationAnimationEnabled() async => _data['celebrationAnimationEnabled'] as bool? ?? true;
+
+  @override
+  Future<void> setCelebrationAnimationEnabled(bool enabled) async => _data['celebrationAnimationEnabled'] = enabled;
+
+  @override
+  Future<void> remove(String key) async => _data.remove(key);
 }

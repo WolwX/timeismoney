@@ -31,6 +31,22 @@ abstract class IStorageService {
   Future<double?> getWeeklyHours();
   Future<void> setWeeklyHours(double hours);
 
+  // Notification preferences
+  Future<bool?> getNotificationsEnabled();
+  Future<void> setNotificationsEnabled(bool enabled);
+
+  Future<bool?> getTimerFinishedNotificationsEnabled();
+  Future<void> setTimerFinishedNotificationsEnabled(bool enabled);
+
+  Future<bool?> getGainMilestoneNotificationsEnabled();
+  Future<void> setGainMilestoneNotificationsEnabled(bool enabled);
+
+  Future<bool?> getHourlyNotificationsEnabled();
+  Future<void> setHourlyNotificationsEnabled(bool enabled);
+
+  Future<bool?> getCelebrationAnimationEnabled();
+  Future<void> setCelebrationAnimationEnabled(bool enabled);
+
   // Generic string storage for complex data (JSON)
   Future<String?> getString(String key);
   Future<void> setString(String key, String value);
@@ -51,6 +67,11 @@ class StorageService implements IStorageService {
   static const String _kRateTitleKey = 'rateTitle';
   static const String _kNetRatePercentageKey = 'netRatePercentage';
   static const String _kWeeklyHoursKey = 'weeklyHours';
+  static const String _kNotificationsEnabledKey = 'notificationsEnabled';
+  static const String _kTimerFinishedNotificationsEnabledKey = 'timerFinishedNotificationsEnabled';
+  static const String _kGainMilestoneNotificationsEnabledKey = 'gainMilestoneNotificationsEnabled';
+  static const String _kHourlyNotificationsEnabledKey = 'hourlyNotificationsEnabled';
+  static const String _kCelebrationAnimationEnabledKey = 'celebrationAnimationEnabled';
 
   Future<SharedPreferences> get _prefs async => SharedPreferences.getInstance();
 
@@ -152,6 +173,66 @@ class StorageService implements IStorageService {
   Future<void> setWeeklyHours(double hours) async {
     final prefs = await _prefs;
     await prefs.setDouble(_kWeeklyHoursKey, hours);
+  }
+
+  @override
+  Future<bool?> getNotificationsEnabled() async {
+    final prefs = await _prefs;
+    return prefs.getBool(_kNotificationsEnabledKey) ?? true; // Activé par défaut
+  }
+
+  @override
+  Future<void> setNotificationsEnabled(bool enabled) async {
+    final prefs = await _prefs;
+    await prefs.setBool(_kNotificationsEnabledKey, enabled);
+  }
+
+  @override
+  Future<bool?> getTimerFinishedNotificationsEnabled() async {
+    final prefs = await _prefs;
+    return prefs.getBool(_kTimerFinishedNotificationsEnabledKey) ?? true; // Activé par défaut
+  }
+
+  @override
+  Future<void> setTimerFinishedNotificationsEnabled(bool enabled) async {
+    final prefs = await _prefs;
+    await prefs.setBool(_kTimerFinishedNotificationsEnabledKey, enabled);
+  }
+
+  @override
+  Future<bool?> getGainMilestoneNotificationsEnabled() async {
+    final prefs = await _prefs;
+    return prefs.getBool(_kGainMilestoneNotificationsEnabledKey) ?? true; // Activé par défaut
+  }
+
+  @override
+  Future<void> setGainMilestoneNotificationsEnabled(bool enabled) async {
+    final prefs = await _prefs;
+    await prefs.setBool(_kGainMilestoneNotificationsEnabledKey, enabled);
+  }
+
+  @override
+  Future<bool?> getHourlyNotificationsEnabled() async {
+    final prefs = await _prefs;
+    return prefs.getBool(_kHourlyNotificationsEnabledKey) ?? false; // Désactivé par défaut
+  }
+
+  @override
+  Future<void> setHourlyNotificationsEnabled(bool enabled) async {
+    final prefs = await _prefs;
+    await prefs.setBool(_kHourlyNotificationsEnabledKey, enabled);
+  }
+
+  @override
+  Future<bool?> getCelebrationAnimationEnabled() async {
+    final prefs = await _prefs;
+    return prefs.getBool(_kCelebrationAnimationEnabledKey) ?? true; // Activé par défaut
+  }
+
+  @override
+  Future<void> setCelebrationAnimationEnabled(bool enabled) async {
+    final prefs = await _prefs;
+    await prefs.setBool(_kCelebrationAnimationEnabledKey, enabled);
   }
 
   @override

@@ -1,10 +1,10 @@
 # PROJECT_CONTEXT (machine-friendly)
 
-Last updated: 2025-10-15
+Last updated: 2025-10-17
 
 ## Overview
 - **Project**: Time Is Money (Flutter app)
-- **Version**: 1.4.1 (pubspec.yaml: 1.4.1+151025)
+- **Version**: 1.4.3 (pubspec.yaml: 1.4.3+171025)
 - **Framework**: Flutter (SDK >=3.0.0)
 - **State management**: Provider (ChangeNotifier)
 - **Persistence**: SharedPreferences behind IStorageService
@@ -49,6 +49,17 @@ Last updated: 2025-10-15
   - Amélioration de l’ergonomie des dialogues de presets (espacement, compacité)
   - Correction de détails visuels sur les dialogues de réglages
   - Voir CHANGELOG.txt pour l’historique complet
+
+- **NEW in v1.4.3**
+  - Système de notifications push locales complet (timer terminé, jalons de gains, rappels horaires)
+  - Préférences de notifications configurables par l'utilisateur
+  - Animation de célébration avec particules smiley quand timer atteint zéro
+  - Enregistrement automatique des célébrations en arrière-plan
+  - Nouvelle catégorie "Dreamlist" avec jobs de rêve motivants
+  - Organisation en accordéon complète des presets avec ExpansionTile
+  - Bordure rouge 0.5px quand timer atteint zéro (feedback visuel)
+  - Mode immersif Android pour éviter chevauchement des barres système
+  - Corrections techniques pour animation minuteur sur Flutter Chrome
 - `FooterBar` (`lib/widgets/footer_bar.dart`): Version display
   - Reads version from pubspec.yaml → PackageInfo fallback
   - Format: v1.4.1.151025
@@ -107,6 +118,50 @@ Last updated: 2025-10-15
 - Independent start/stop/reset per timer
 - Global start/stop/reset all active timers
 
+## Key Features (v1.4.3)
+
+### Complete Notification System (NEW)
+- Local push notifications for important events
+- 3 configurable notification types:
+  - **Timer finished**: Alert when timer reaches target
+  - **Gain milestones**: Notifications at configurable gain thresholds
+  - **Hourly reminders**: Periodic reminders during work sessions
+- Automatic permissions on Android/iOS
+- Separate notification channels for optimal management
+- User preferences stored in SharedPreferences
+
+### Celebration Animation System (NEW)
+- Particle animation with smileys when timer reaches zero
+- Automatic background recording for active timers
+- Automatic playback when returning to app
+- User preference to enable/disable animations
+- Smart management of pending celebrations
+- CelebrationManager service for centralized control
+
+### Dreamlist Category (NEW)
+- New preset category with motivational dream jobs
+- Kylian Mbappé moved to this category
+- Additional presets: Astronaut (NASA), Film Director (Hollywood), Professional Gamer, etc.
+- Distinctive icon (✨) for the category
+
+### Accordion Preset Organization (NEW)
+- Complete restructuring with ExpansionTile for each category
+- Collapsible presentation for better navigation
+- "Dreamlist" removed from quick presets (avoids redundancy)
+- Renamed to "Presets Dreamlist" for clarity
+
+### Visual Feedback Enhancements (NEW)
+- Red 0.5px border when timer reaches zero
+- Normal border adjusted to 0.2px for better visibility
+- Dynamic border color logic in TimerDisplay widget
+- Improved visual feedback for timer states
+
+### Android Immersive Mode (NEW)
+- SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky)
+- Hides system bars to prevent footer overlap
+- Notch support added in AndroidManifest.xml
+- Better full-screen experience on Android devices
+
 ## Technical Details
 
 ### Persistence Strategy
@@ -159,10 +214,10 @@ await storage.setString('timers', jsonEncode(timersList));
 4. Display updates: "Base XXh/sem." shows country-specific hours
 
 ### Version Management
-- pubspec.yaml: `version: 1.3.0+141025`
+- pubspec.yaml: `version: 1.4.3+171025`
 - Format: MAJOR.MINOR.PATCH+BUILDNUMBER
 - Build number: DDMMYY (release date)
-- Footer displays: v1.3.0.141025
+- Footer displays: v1.4.3.171025
 
 ## Country Data Examples (v1.3.0)
 
@@ -247,11 +302,18 @@ flutter build windows
 - Statistics and charts
 - Export history to CSV
 
-### Priority 3: Enhancements
+### Priority 3: Notification Enhancements (v1.4.3 COMPLETED)
+- ✅ Complete notification system with timer finished, gain milestones, hourly reminders
+- ✅ User-configurable notification preferences
+- ✅ Celebration animation with smileys and background recording
+- ✅ Android immersive mode for better full-screen experience
+
+### Priority 4: UI/UX Improvements
 - More than 2 timers (grid layout)
 - Timer categories/tags
 - Dark/Light theme toggle
 - Sound notifications
+- Enhanced preset organization with search/filter
 
 ## CI/CD Recommendations
 - GitHub Actions workflow for automated builds

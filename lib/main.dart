@@ -1,33 +1,48 @@
 // lib/main.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart'; 
 import 'package:timeismoney/providers/multi_timer_controller.dart';
 import 'package:timeismoney/providers/locale_provider.dart';
 import 'package:timeismoney/services/storage_service.dart';
-import 'package:timeismoney/services/time_sync_service.dart';
+import 'package:timeismoney/services/notification_service.dart';
+import 'package:timeismoney/services/celebration_manager.dart';
 import 'package:timeismoney/l10n/app_localizations.dart';
-// Import du nouveau Splash Screen
-import 'package:timeismoney/screens/splash_screen.dart'; 
+// Import du HomeScreen
+import 'package:timeismoney/screens/home_screen.dart'; 
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Configuration du mode immersif pour Android (cache les barres système)
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
   final storage = StorageService();
-  final controller = MultiTimerController(storage: storage);
+  final notificationService = NotificationService();
+  await notificationService.init();
+  
+  final celebrationManager = CelebrationManager(storage: storage);
+  
+  final controller = MultiTimerController(
+    storage: storage, 
+    notificationService: notificationService,
+    celebrationManager: celebrationManager,
+  );
   await controller.init();
 
   // Initialisation du service de synchronisation du temps
-  final timeSyncService = TimeSyncService();
-  await timeSyncService.fetchNetworkDateTime();
+  // final timeSyncService = TimeSyncService();
+  // await timeSyncService.fetchNetworkDateTime();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<MultiTimerController>.value(value: controller),
         ChangeNotifierProvider<LocaleProvider>(create: (_) => LocaleProvider()),
-        Provider<TimeSyncService>.value(value: timeSyncService),
+        ChangeNotifierProvider<CelebrationManager>.value(value: celebrationManager),
+        // Provider<TimeSyncService>.value(value: timeSyncService),
       ],
       child: const TimeIsMoneyApp(),
     ),
@@ -52,7 +67,7 @@ class TimeIsMoneyApp extends StatelessWidget {
             Locale('en', ''), // Anglais
             Locale('es', ''), // Espagnol
           ],
-          localizationsDelegates: const [
+          localizationsDelegates: [
             AppLocalizationsDelegate(),
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
@@ -64,8 +79,8 @@ class TimeIsMoneyApp extends StatelessWidget {
             primarySwatch: Colors.teal,
             scaffoldBackgroundColor: Colors.black,
           ),
-          // Démarrage sur le Splash Screen au lieu du HomeScreen
-          home: const SplashScreen(), 
+          // Démarrage sur le HomeScreen
+          home: const HomeScreen(), 
         );
       },
     );

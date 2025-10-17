@@ -1,3 +1,89 @@
+Date : 17/10/2025
+
+--------------------------------------------------------------------------------
+V. 1.4.3 - Système de Notifications Complet & Améliorations UI
+--------------------------------------------------------------------------------
+
+NOUVEAUTÉS MAJEURES
+
+- Mise à jour de la version d'application dans pubspec.yaml : 1.4.3+171025
+
+* **Système de Notifications Complet (NOUVEAU) :**
+    * Notifications push locales pour les événements importants
+    * 3 types de notifications configurables :
+      - **Timer terminé** : Alerte quand un timer atteint son objectif
+      - **Jalons de gains** : Notifications à chaque palier de gains (configurable)
+      - **Rappels horaires** : Rappels périodiques pendant le travail
+    * Permissions automatiques sur Android/iOS
+    * Canaux de notification distincts pour une gestion optimale
+
+* **Préférences de Notifications Configurables :**
+    * Nouvelle tuile "Notifications" dans les réglages (2ème position)
+    * Dialogue dédié pour activer/désactiver chaque type de notification
+    * Paramétrage des jalons de gains (montants personnalisables)
+    * Paramétrage de la fréquence des rappels horaires
+    * Persistence des préférences utilisateur
+
+* **Animation de Célébration avec Smileys (NOUVEAU) :**
+    * Animation de particules avec smileys quand le timer atteint zéro
+    * Enregistrement automatique en arrière-plan pour les timers actifs
+    * Lecture automatique de l'animation au retour dans l'app
+    * Préférence utilisateur pour activer/désactiver l'animation
+    * Gestion intelligente des célébrations en attente
+
+* **Catégorie "Dreamlist" pour Jobs de Rêve (NOUVEAU) :**
+    * Nouvelle catégorie de presets avec des salaires motivants
+    * Kylian Mbappé déplacé dans cette catégorie
+    * Nouveaux presets ajoutés : Astronaut (NASA), Film Director (Hollywood), Professional Gamer, etc.
+    * Icône distinctive pour la catégorie (✨)
+
+* **Organisation en Accordéon des Presets :**
+    * Restructuration complète avec ExpansionTile pour chaque catégorie
+    * Présentation collapsible pour une meilleure navigation
+    * Suppression de "Dreamlist" des presets rapides (évite redondance)
+    * Renommage en "Presets Dreamlist" pour plus de clarté
+
+* **Réorganisation des Tuiles de Réglages :**
+    * "Gestion des Timers" déplacée en première position (priorité haute)
+    * "Notifications" en deuxième position (fonctionnalité majeure)
+    * Hiérarchie visuelle améliorée des fonctionnalités principales
+
+* **Améliorations Visuelles et UI :**
+    * Bordure des timers ajustée à 0.2 pixels pour meilleure visibilité
+    * Bordure rouge de 0.5 pixel quand le timer atteint zéro (feedback visuel)
+    * Changement d'icône pour "Presets Rapides" : liste (📋) au lieu d'étoile (⭐)
+    * Interface plus cohérente et organisée
+
+* **Corrections Techniques :**
+    * Correction de l'animation de célébration en mode minuteur sur Flutter Chrome
+    * Amélioration de la logique d'arrêt du timer pour une fiabilité accrue
+    * Mode immersif Android activé pour éviter le chevauchement du footer par les barres système
+    * Support des encoches (notch) ajouté dans AndroidManifest.xml
+
+AMÉLIORATIONS TECHNIQUES
+
+* **Architecture des Notifications :**
+    * Nouveau service `NotificationService` avec méthodes spécialisées
+    * Intégration `flutter_local_notifications` pour cross-platform
+    * Gestion des permissions et canaux de notification
+
+* **Système de Célébration :**
+    * `CelebrationManager` pour gestion centralisée des animations
+    * `CelebrationAnimation` widget avec particules smiley
+    * Persistence des célébrations en attente
+    * Observateur du cycle de vie de l'app (WidgetsBindingObserver)
+
+* **Enregistrement Indépendant des Modes :**
+    * Temps séparés pour mode chrono et mode minuteur
+    * Persistence distincte pour éviter les conflits
+    * Calculs précis selon le mode actif
+
+* **Mode Immersif Android :**
+    * Configuration `SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky)`
+    * Support des encoches dans AndroidManifest.xml
+    * Prévention du chevauchement des barres système
+
+--------------------------------------------------------------------------------
 Date : 16/10/2025
 
 --------------------------------------------------------------------------------

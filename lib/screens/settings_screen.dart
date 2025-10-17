@@ -50,6 +50,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     'Politique / Dirigeants': Icons.gavel,
     'Tech / PDG': Icons.computer,
     'Sport / Fun': Icons.sports_tennis,
+    'Dreamlist': Icons.star_border,
     'Taux Étrangers': Icons.public,
   };
   
@@ -470,7 +471,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              // Ligne 1 : 3 tuiles plus petites
+              // Ligne 1 : 4 tuiles plus petites
               Row(
                 children: [
                   Expanded(
@@ -479,6 +480,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: 'Gestion des\nTimers',
                       color: const Color(0xFFFFD700),
                       onTap: () => _showTimerManagementDialog(controller),
+                      isSmall: true,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSettingsTile(
+                      icon: Icons.notifications,
+                      title: 'Notifications',
+                      color: Colors.blue,
+                      onTap: () => _showNotificationsDialog(),
                       isSmall: true,
                     ),
                   ),
@@ -505,12 +516,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              // Ligne 2 : 2 tuiles plus grosses
+              // Ligne 2 : 3 tuiles pour les presets
               Row(
                 children: [
                   Expanded(
                     child: _buildSettingsTile(
-                      icon: Icons.star,
+                      icon: Icons.format_list_bulleted,
                       title: 'Presets\nRapides',
                       color: Colors.purple,
                       onTap: () => _showPresetsDialog(controller),
@@ -524,6 +535,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: 'Presets\nFun',
                       color: Colors.orange,
                       onTap: () => _showFunPresetsDialog(controller),
+                      isSmall: false,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSettingsTile(
+                      icon: Icons.star_border,
+                      title: 'Presets\nDreamlist',
+                      color: Colors.pink,
+                      onTap: () => _showDreamlistPresetsDialog(controller),
                       isSmall: false,
                     ),
                   ),
@@ -664,6 +685,69 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _showGeneralPreferencesDialog();
                   },
                 ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fermer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Dialog pour les notifications
+  void _showNotificationsDialog() {
+    final controller = context.read<MultiTimerController>();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('🔔 Notifications'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SwitchListTile(
+                title: const Text('Fin du timer'),
+                subtitle: const Text('Notifier quand un timer se termine'),
+                value: controller.timerFinishedNotificationsEnabled,
+                onChanged: (value) {
+                  controller.setTimerFinishedNotificationsEnabled(value);
+                },
+                secondary: const Icon(Icons.timer_off, color: Colors.orange),
+              ),
+              const Divider(),
+              SwitchListTile(
+                title: const Text('Jalons de gains'),
+                subtitle: const Text('Notifier aux jalons de gains (10€, 50€, etc.)'),
+                value: controller.gainMilestoneNotificationsEnabled,
+                onChanged: (value) {
+                  controller.setGainMilestoneNotificationsEnabled(value);
+                },
+                secondary: const Icon(Icons.trending_up, color: Colors.green),
+              ),
+              const Divider(),
+              SwitchListTile(
+                title: const Text('Rappels horaires'),
+                subtitle: const Text('Notifier chaque heure travaillée'),
+                value: controller.hourlyNotificationsEnabled,
+                onChanged: (value) {
+                  controller.setHourlyNotificationsEnabled(value);
+                },
+                secondary: const Icon(Icons.schedule, color: Colors.blue),
+              ),
+              const Divider(),
+              SwitchListTile(
+                title: const Text('Animation de fête'),
+                subtitle: const Text('Afficher une animation quand le timer atteint zéro'),
+                value: controller.celebrationAnimationEnabled,
+                onChanged: (value) {
+                  controller.setCelebrationAnimationEnabled(value);
+                },
+                secondary: const Icon(Icons.celebration, color: Colors.purple),
               ),
             ],
           ),
@@ -821,19 +905,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // Dialog pour les presets
   void _showPresetsDialog(MultiTimerController controller) {
     final groupedPresets = _groupPresets(presetRates);
-    // Filtrer uniquement les catégories "standards" (excluant Sport/Fun, Tech/PDG, Politique)
+    // Filtrer uniquement les catégories "standards" (excluant Sport/Fun, Tech/PDG, Politique, Dreamlist)
     final standardCategories = Map.fromEntries(
       groupedPresets.entries.where((entry) => 
         entry.key != 'Sport / Fun' && 
         entry.key != 'Tech / PDG' && 
-        entry.key != 'Politique / Dirigeants'
+        entry.key != 'Politique / Dirigeants' &&
+        entry.key != 'Dreamlist'
       ),
     );
     
     showDialog(
       context: context,
       builder: (context) => _PresetsDialog(
-        title: '⭐ Presets Rapides',
+        title: '📋 Presets Rapides',
         groupedPresets: standardCategories,
         controller: controller,
         categoryIcons: _categoryIcons,
@@ -856,6 +941,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (context) => _PresetsDialog(
         title: '🏆 Presets Fun',
         groupedPresets: funCategories,
+        controller: controller,
+        categoryIcons: _categoryIcons,
+      ),
+    );
+  }
+
+  // Dialog pour les presets Dreamlist
+  void _showDreamlistPresetsDialog(MultiTimerController controller) {
+    final groupedPresets = _groupPresets(presetRates);
+    // Filtrer uniquement la catégorie "Dreamlist"
+    final dreamlistCategories = {
+      'Dreamlist': groupedPresets['Dreamlist'] ?? [],
+    };
+    
+    showDialog(
+      context: context,
+      builder: (context) => _PresetsDialog(
+        title: '✨ Presets Dreamlist',
+        groupedPresets: dreamlistCategories,
         controller: controller,
         categoryIcons: _categoryIcons,
       ),
@@ -1008,30 +1112,34 @@ class _PresetsDialogState extends State<_PresetsDialog> {
       title: Text(widget.title),
       content: SizedBox(
         width: 400,
+        height: 600, // Fixed height for better scrolling
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: widget.groupedPresets.entries.expand((entry) {
+            children: widget.groupedPresets.entries.map((entry) {
               final category = entry.key;
               final presets = entry.value;
-              return [
-                Padding(
-                  padding: const EdgeInsets.only(top: 12, bottom: 4),
-                  child: Row(
-                    children: [
-                      Icon(widget.categoryIcons[category] ?? Icons.star, size: 20, color: Colors.tealAccent),
-                      const SizedBox(width: 8),
-                      Text(category, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                    ],
+              return ExpansionTile(
+                leading: Icon(widget.categoryIcons[category] ?? Icons.star, size: 24, color: Colors.tealAccent),
+                title: Text(
+                  category,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.white,
                   ),
                 ),
-                ...presets.map((preset) {
+                iconColor: Colors.tealAccent,
+                collapsedIconColor: Colors.tealAccent,
+                backgroundColor: Colors.grey.shade800.withOpacity(0.3),
+                collapsedBackgroundColor: Colors.grey.shade900.withOpacity(0.5),
+                children: presets.map((preset) {
                   final monthlyGross = preset.rate * 4.33 * preset.weeklyHours;
                   final monthlyNet = monthlyGross * (preset.netRatePercentage / 100.0);
                   final annualGross = monthlyGross * 12;
                   final annualNet = monthlyNet * 12;
                   return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
                     color: Colors.grey.shade900,
                     child: Padding(
                       padding: const EdgeInsets.all(10.0),
@@ -1046,6 +1154,9 @@ class _PresetsDialogState extends State<_PresetsDialog> {
                                 child: Text(
                                   preset.title,
                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                                  softWrap: true,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -1140,8 +1251,8 @@ class _PresetsDialogState extends State<_PresetsDialog> {
                       ),
                     ),
                   );
-                }),
-              ];
+                }).toList(),
+              );
             }).toList(),
           ),
         ),

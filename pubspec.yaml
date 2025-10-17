@@ -1,7 +1,7 @@
 name: timeismoney
 description: Application ludique et utilitaire pour visualiser en temps réel l'argent que l'on gagne.
 publish_to: 'none'
-version: 1.4.2+161025
+version: 1.4.3+171025
 
 environment:
   sdk: '>=3.0.0 <4.0.0' 
@@ -21,6 +21,7 @@ dependencies:
   shared_preferences: ^2.3.2
   http: ^1.1.0 # Pour récupérer les taux de change
   url_launcher: ^6.2.0 # Pour ouvrir des URLs dans le navigateur
+  flutter_local_notifications: ^17.2.2 # Pour les notifications locales
 
   # Optional: if you want to render SVG assets directly in Flutter widgets
   flutter_svg: ^2.0.0

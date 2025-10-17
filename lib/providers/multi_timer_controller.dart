@@ -5,6 +5,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:timeismoney/models/single_timer.dart';
 import 'package:timeismoney/services/storage_service.dart';
+import 'package:timeismoney/services/notification_service.dart';
+import 'package:timeismoney/services/celebration_manager.dart';
 
 class MultiTimerController extends ChangeNotifier {
   // Définit le montant cible du minuteur et calcule la durée cible automatiquement
@@ -79,11 +81,36 @@ class MultiTimerController extends ChangeNotifier {
   static const String _preferredCurrencyKey = 'preferred_currency';
 
   final StorageService storage;
+  final NotificationService notificationService;
+  final CelebrationManager celebrationManager;
 
   List<SingleTimer> _timers = [];
   int _selectedTimerIndex = 0;
 
-  MultiTimerController({required this.storage}) {
+  // Suivi des paliers de gain atteints pour éviter les notifications répétées
+  final Map<int, Set<double>> _notifiedMilestones = {};
+  // Suivi des heures notifiées pour éviter les doublons
+  final Map<int, Set<int>> _notifiedHours = {};
+
+  // Préférences de notifications
+  bool _notificationsEnabled = true;
+  bool _timerFinishedNotificationsEnabled = true;
+  bool _gainMilestoneNotificationsEnabled = true;
+  bool _hourlyNotificationsEnabled = false;
+  bool _celebrationAnimationEnabled = true;
+
+  // Getters pour les préférences de notifications
+  bool get notificationsEnabled => _notificationsEnabled;
+  bool get timerFinishedNotificationsEnabled => _timerFinishedNotificationsEnabled;
+  bool get gainMilestoneNotificationsEnabled => _gainMilestoneNotificationsEnabled;
+  bool get hourlyNotificationsEnabled => _hourlyNotificationsEnabled;
+  bool get celebrationAnimationEnabled => _celebrationAnimationEnabled;
+
+  MultiTimerController({
+    required this.storage,
+    required this.notificationService,
+    required this.celebrationManager,
+  }) {
     // Initialiser avec 2 timers par défaut
     _timers = [
       SingleTimer(id: 1, name: 'Timer 1', isActive: true),
@@ -94,6 +121,7 @@ class MultiTimerController extends ChangeNotifier {
 
   Future<void> init() async {
     await loadTimers();
+    await _loadNotificationPreferences();
   }
   String? get preferredCurrency => _preferredCurrency;
   List<SingleTimer> get timers => _timers;
@@ -111,6 +139,15 @@ class MultiTimerController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _loadNotificationPreferences() async {
+    _notificationsEnabled = await storage.getNotificationsEnabled() ?? true;
+    _timerFinishedNotificationsEnabled = await storage.getTimerFinishedNotificationsEnabled() ?? true;
+    _gainMilestoneNotificationsEnabled = await storage.getGainMilestoneNotificationsEnabled() ?? true;
+    _hourlyNotificationsEnabled = await storage.getHourlyNotificationsEnabled() ?? false;
+    _celebrationAnimationEnabled = await storage.getCelebrationAnimationEnabled() ?? true;
+    notifyListeners();
+  }
+
   Future<void> setPreferredCurrency(String? currency) async {
     _preferredCurrency = currency;
     if (currency == null) {
@@ -118,6 +155,37 @@ class MultiTimerController extends ChangeNotifier {
     } else {
       await storage.setString(_preferredCurrencyKey, currency);
     }
+    notifyListeners();
+  }
+
+  // Setters pour les préférences de notifications
+  Future<void> setNotificationsEnabled(bool enabled) async {
+    _notificationsEnabled = enabled;
+    await storage.setNotificationsEnabled(enabled);
+    notifyListeners();
+  }
+
+  Future<void> setTimerFinishedNotificationsEnabled(bool enabled) async {
+    _timerFinishedNotificationsEnabled = enabled;
+    await storage.setTimerFinishedNotificationsEnabled(enabled);
+    notifyListeners();
+  }
+
+  Future<void> setGainMilestoneNotificationsEnabled(bool enabled) async {
+    _gainMilestoneNotificationsEnabled = enabled;
+    await storage.setGainMilestoneNotificationsEnabled(enabled);
+    notifyListeners();
+  }
+
+  Future<void> setHourlyNotificationsEnabled(bool enabled) async {
+    _hourlyNotificationsEnabled = enabled;
+    await storage.setHourlyNotificationsEnabled(enabled);
+    notifyListeners();
+  }
+
+  Future<void> setCelebrationAnimationEnabled(bool enabled) async {
+    _celebrationAnimationEnabled = enabled;
+    await storage.setCelebrationAnimationEnabled(enabled);
     notifyListeners();
   }
 
@@ -217,6 +285,10 @@ class MultiTimerController extends ChangeNotifier {
       stopTimer(index);
     }
     
+    // Nettoyer les paliers notifiés pour ce timer
+    _notifiedMilestones.remove(_timers[index].id);
+    _notifiedHours.remove(_timers[index].id);
+    
     _timers.removeAt(index);
     
     // Ajuster l'index sélectionné si nécessaire
@@ -265,6 +337,11 @@ class MultiTimerController extends ChangeNotifier {
     timer.pausedDuration = Duration.zero;
     timer.currentGains = 0.0;
     timer.sessionStartTime = null;
+
+    // Réinitialiser les paliers notifiés pour ce timer
+    _notifiedMilestones[timer.id]?.clear();
+    _notifiedHours[timer.id]?.clear();
+
     saveTimers();
     notifyListeners();
   }
@@ -352,16 +429,96 @@ class MultiTimerController extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Vérifier les paliers de gain atteints pour les notifications
+  void _checkGainMilestones(SingleTimer timer) {
+    if (!_notificationsEnabled) return;
+
+    final timerId = timer.id;
+    final currentGains = timer.currentGains;
+    final elapsedHours = timer.elapsedDuration.inHours;
+
+    // Initialiser les ensembles des paliers notifiés pour ce timer s'il n'existe pas
+    _notifiedMilestones.putIfAbsent(timerId, () => {});
+    _notifiedHours.putIfAbsent(timerId, () => {});
+
+    // Vérifier les paliers de gain si activés
+    if (_gainMilestoneNotificationsEnabled) {
+      // Définir les paliers de gain (10€, 25€, 50€, 100€, 250€, 500€, 1000€, etc.)
+      final milestones = [10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2500.0, 5000.0, 10000.0];
+
+      for (final milestone in milestones) {
+        if (currentGains >= milestone && !_notifiedMilestones[timerId]!.contains(milestone)) {
+          // Marquer ce palier comme notifié
+          _notifiedMilestones[timerId]!.add(milestone);
+
+          // Envoyer la notification
+          notificationService.showGainMilestoneNotification(
+            timerName: timer.name,
+            milestoneAmount: milestone,
+            currency: timer.currency,
+            elapsedTime: timer.elapsedDuration,
+          );
+          break; // Ne notifier qu'un palier à la fois
+        }
+      }
+    }
+
+    // Vérifier les heures écoulées si activées
+    if (_hourlyNotificationsEnabled && elapsedHours > 0) {
+      // Notifier chaque heure complète (1h, 2h, 3h, etc.)
+      if (!_notifiedHours[timerId]!.contains(elapsedHours)) {
+        _notifiedHours[timerId]!.add(elapsedHours);
+
+        // Envoyer la notification horaire
+        notificationService.showPeriodicReminderNotification(
+          timerName: timer.name,
+          currentGains: currentGains,
+          currency: timer.currency,
+          elapsedTime: timer.elapsedDuration,
+        );
+      }
+    }
+  }
+
   void _startInternalTimer(SingleTimer timer) {
     timer.internalTimer?.cancel();
     timer.internalTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       timer.recalculateTime();
-      
+
       // Vérifier si en mode minuteur, le temps restant est écoulé
-      if (timer.isReverseMode && timer.getRemainingTime() != null && timer.getRemainingTime()!.inSeconds <= 0) {
-        stopTimer(timer.id);
+      if (timer.isReverseMode) {
+        final remainingTime = timer.getRemainingTime();
+        // Condition plus robuste : soit le temps restant est null (calcul impossible), 
+        // soit il est <= 0, soit le montant cible est atteint
+        final shouldStop = remainingTime == null || 
+                          remainingTime.inSeconds <= 0 || 
+                          (timer.targetAmount != null && timer.currentGains >= timer.targetAmount!);
+        
+        if (shouldStop) {
+          stopTimer(timer.id);
+          // Notification pour la fin du timer si activée
+          if (_notificationsEnabled && _timerFinishedNotificationsEnabled) {
+            notificationService.showTimerFinishedNotification(
+              timerName: timer.name,
+              targetAmount: timer.targetAmount ?? 0.0,
+              currency: timer.currency,
+            );
+          }
+          // Enregistrer l'animation de fête si activée
+          if (_celebrationAnimationEnabled) {
+            celebrationManager.addPendingCelebration(PendingCelebration(
+              timerName: timer.name,
+              triggeredAt: DateTime.now(),
+              targetAmount: timer.targetAmount,
+              currency: timer.currency,
+            ));
+          }
+        }
+      } else {
+        // Vérifier les paliers de gain en mode normal
+        _checkGainMilestones(timer);
       }
-      
+
       notifyListeners();
     });
   }

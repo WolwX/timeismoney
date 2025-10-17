@@ -1,19 +1,31 @@
 PROJECT REFERENCE FILE
 ================================================================================
-DERNIÈRE MISE À JOUR : 15/10/2025
-BUT DU PROJET : Application Flutter de chronométrage financier ("Time Is Money") affichant les gains en temps réel basés sur un taux horaire paramétrable avec support multi-timer et base de données internationale de salaires minimums.
+DERNIÈRE MISE À JOUR : 17/10/2025
+BUT DU PROJET : Application Flutter de chronométrage financier ("Time Is Money") affichant les gains en temps réel basés sur un taux horaire paramétrable avec support multi-timer, base de données internationale de salaires minimums, système de notifications complet et animations de célébration.
 CONTEXTE TECHNIQUE : 
     - Framework : Flutter
     - Gestion d'état : Provider (ChangeNotifier)
     - Persistance locale : shared_preferences (utilisation via une abstraction `IStorageService`)
+    - Notifications : flutter_local_notifications pour push locales
     - Architecture : MVVM avec models, controllers, widgets réutilisables
 
 --------------------------------------------------------------------------------
-1. ÉTAT ACTUEL DE L'APPLICATION (V. 1.4.1, pubspec.yaml: 1.4.1+151025)
+1. ÉTAT ACTUEL DE L'APPLICATION (V. 1.4.3, pubspec.yaml: 1.4.3+171025)
 --------------------------------------------------------------------------------
 
 FONCTIONNALITÉS COMPLÈTES :
 
+
+**NOUVEAUTÉS MAJEURES EN V1.4.3 :**
+* Système de notifications push locales complet (timer terminé, jalons de gains, rappels horaires)
+* Préférences de notifications configurables par l'utilisateur
+* Animation de célébration avec particules smiley quand timer atteint zéro
+* Enregistrement automatique des célébrations en arrière-plan
+* Nouvelle catégorie "Dreamlist" avec jobs de rêve motivants (Kylian Mbappé, Astronaut NASA, etc.)
+* Organisation en accordéon complète des presets avec ExpansionTile
+* Bordure rouge 0.5px quand timer atteint zéro (feedback visuel)
+* Mode immersif Android pour éviter chevauchement des barres système
+* Corrections techniques pour animation minuteur sur Flutter Chrome
 
 **NOUVEAUTÉS MAJEURES EN V1.4.1 :**
 * Affichage des presets par catégorie sous forme de menu accordéon (ExpansionPanelList)
@@ -80,6 +92,31 @@ FONCTIONNALITÉS COMPLÈTES :
     * Gain BRUT : Référence secondaire (Vert)
 17. **Estimations :** Estimations Mensuelles et Annuelles (Brut et Net) calculées dynamiquement selon les heures hebdomadaires du pays.
 
+**SYSTÈME DE NOTIFICATIONS COMPLET (V1.4.3) :**
+18. **Notifications Push Locales :** 3 types configurables (timer terminé, jalons de gains, rappels horaires)
+19. **Préférences Utilisateur :** Activation/désactivation individuelle via dialogue dédié dans réglages
+20. **Permissions Automatiques :** Gestion des autorisations Android/iOS avec flutter_local_notifications
+21. **Canaux Distincts :** Organisation optimale avec canaux de notification séparés
+
+**ANIMATION DE CÉLÉBRATION (V1.4.3) :**
+22. **Particules Smiley :** Animation de célébration quand timer atteint zéro
+23. **Enregistrement Arrière-Plan :** Capture automatique des célébrations pour timers actifs
+24. **Lecture Automatique :** Déclenchement au retour dans l'app (WidgetsBindingObserver)
+25. **Préférence Utilisateur :** Activation/désactivation via dialogue notifications
+26. **Gestion Intelligente :** CelebrationManager pour file d'attente des animations
+
+**CATÉGORIE DREAMLIST (V1.4.3) :**
+27. **Jobs de Rêve :** Nouvelle catégorie avec salaires motivants (Kylian Mbappé, Astronaut NASA, Film Director Hollywood, Professional Gamer)
+28. **Icône Distinctive :** ✨ pour différencier de la catégorie Rapides
+29. **ExpansionTile :** Organisation en accordéon pour navigation améliorée
+30. **Motivation :** Salaires élevés pour maintenir l'engagement utilisateur
+
+**AMÉLIORATIONS VISUELLES (V1.4.3) :**
+31. **Bordure Dynamique :** Rouge 0.5px quand timer atteint zéro, 0.2px normal
+32. **Feedback Visuel :** _getBorderColor() et _getBorderWidth() dans TimerDisplay
+33. **Mode Immersif Android :** SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky)
+34. **Support Encoches :** android.notch_support="true" dans AndroidManifest.xml
+
 FICHIERS CLÉS ET RÔLES :
 
 **MODELS :**
@@ -122,9 +159,14 @@ FICHIERS CLÉS ET RÔLES :
     - Colors : Timer 1 = cyan, Timer 2 = orange
     - Rôle : Affichage réutilisable avec édition interactive
 
+* `lib/widgets/celebration_animation.dart` : Animation particules smiley (NOUVEAU v1.4.3)
+    - CustomPainter : Système de particules avec physique
+    - Controller : AnimationController pour séquences
+    - Playback : Déclenchement depuis CelebrationManager
+
 * `lib/widgets/footer_bar.dart` : Barre de footer avec version et crédits
     - Lecture version depuis pubspec.yaml (rootBundle), fallback PackageInfo
-    - Format : v1.3.0.141025
+    - Format : v1.4.3.171025
     - Rôle : Affichage version et crédits
 
 * `lib/widgets/animated_hourglass.dart` : Sablier animé (CustomPainter) pour splash
@@ -147,6 +189,14 @@ FICHIERS CLÉS ET RÔLES :
 
 **SERVICES :**
 * `lib/services/storage_service.dart` : Abstraction persistance (IStorageService + SharedPreferencesStorage)
+* `lib/services/notification_service.dart` : Gestion notifications push locales (NOUVEAU v1.4.3)
+    - Méthodes : showTimerFinishedNotification(), showGainMilestoneNotification(), showPeriodicReminderNotification()
+    - Permissions : Gestion automatique Android/iOS
+    - Canaux : Organisation par type de notification
+* `lib/services/celebration_manager.dart` : Gestion animations célébration (NOUVEAU v1.4.3)
+    - Persistence : File d'attente célébrations en SharedPreferences
+    - Playback : Déclenchement automatique au retour app
+    - Queue : addCelebration(), consumeNextCelebration(), hasPendingCelebrations
 
 **TESTS :**
 * `test/timer_controller_test.dart` : Tests legacy TimerController avec FakeStorage
@@ -209,12 +259,19 @@ DONNÉES INTERNATIONALES (V1.3.0) :
     - Déclenchement : Enregistrement automatique au RESET (si durée > 0).
 * **Bénéfice :** Suivi des activités, analyses temporelles, export pour comptabilité.
 
+**FONCTIONNALITÉS COMPLÉTÉES EN V1.4.3 :**
+* ✅ **Système de Notifications Complet :** Timer terminé, jalons de gains, rappels horaires avec préférences configurables
+* ✅ **Animation de Célébration :** Particules smiley avec enregistrement arrière-plan et lecture automatique
+* ✅ **Catégorie Dreamlist :** Jobs de rêve motivants avec organisation en accordéon
+* ✅ **Améliorations Visuelles :** Bordure rouge à zéro, mode immersif Android
+* ✅ **Corrections Techniques :** Animation minuteur Flutter Chrome, logique arrêt timer améliorée
+
 **AMÉLIORATIONS FUTURES :**
 * Support de plus de 2 timers simultanés (grille responsive).
-* Notifications push pour milestones de gains.
 * Mode sombre/clair personnalisable.
 * Graphiques d'évolution des gains (dashboard analytics).
 * Intégration calendrier pour planning des sessions.
+* Export d'historique en CSV/JSON depuis HistoryScreen.
 
 --------------------------------------------------------------------------------
 3. NOTES OPÉRATIONNELLES / VERSIONING
@@ -222,16 +279,16 @@ DONNÉES INTERNATIONALES (V1.3.0) :
 
 **FORMAT DE VERSION :**
 * Schéma : `MAJOR.MINOR.PATCH+DDMMYY`
-* Exemple : `1.2.0+121025` (version 1.2.0, build du 12 octobre 2025)
+* Exemple : `1.4.3+171025` (version 1.4.3, build du 17 octobre 2025)
 * Fichier source : `pubspec.yaml` (property `version`)
 
 **AFFICHAGE VERSION :**
 * FooterBar suit cette priorité : explicit param → pubspec.yaml asset → PackageInfo.
-* Format affiché : `v1.2.0.121025` (le + est remplacé par . pour lisibilité).
-* Splash screen affiche une version simplifiée : `v1.2`.
+* Format affiché : `v1.4.3.171025` (le + est remplacé par . pour lisibilité).
+* Splash screen affiche une version simplifiée : `v1.4`.3.
 
 **WORKFLOW DE MISE À JOUR :**
-1. Modifier `version` dans `pubspec.yaml` (ex: `1.2.0+121025` → `1.3.0+150126`).
+1. Modifier `version` dans `pubspec.yaml` (ex: `1.4.2+161025` → `1.4.3+171025`).
 2. Exécuter `flutter pub get` pour empaqueter pubspec.yaml comme asset.
 3. Mettre à jour CHANGELOG.txt avec les nouvelles fonctionnalités.
 4. Mettre à jour version hardcodée dans splash_screen.dart si nécessaire.
@@ -319,6 +376,7 @@ DONNÉES INTERNATIONALES (V1.3.0) :
 **DÉPENDANCES PRINCIPALES :**
 * provider : État réactif
 * shared_preferences : Persistance locale
+* flutter_local_notifications : Notifications push locales (NOUVEAU v1.4.3)
 * package_info_plus : Informations version app
 * flutter_svg : Support SVG assets
 
@@ -376,6 +434,20 @@ DONNÉES INTERNATIONALES (V1.3.0) :
 * Solution : Extension _applyPreset() pour appeler setNetRatePercentage() et setWeeklyHours().
 * Impact : Application cohérente de tous les paramètres pays (taux, devise, % NET, heures/sem).
 * Leçon : Lors de l'ajout de nouveaux champs au modèle, vérifier tous les points d'application.
+
+**BUG 9 - Animation Célébration Non Déclenchée en Mode Minuteur (V1.4.3) :**
+* Symptôme : Animation smiley ne se lançait pas quand timer atteignait zéro en mode minuteur sur Flutter Chrome.
+* Cause : Logique d'arrêt du timer défaillante, condition shouldStop incorrecte pour mode minuteur.
+* Solution : Amélioration logique avec vérifications robustes (timer.isRunning && (isMinuteur ? remainingTime <= Duration.zero : false)).
+* Impact : Animation déclenchée correctement dans tous les modes et plateformes.
+* Leçon : Conditions booléennes complexes nécessitent parenthèses explicites et tests exhaustifs.
+
+**BUG 10 - Chevauchement Footer Android (V1.4.3) :**
+* Symptôme : Barres système Android chevauchaient le footer de l'app.
+* Cause : Mode d'affichage par défaut laissant les barres système visibles.
+* Solution : SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky) + android.notch_support="true".
+* Impact : Expérience plein écran immersive sur Android sans chevauchement.
+* Leçon : Configurations spécifiques plateforme nécessaires pour expérience optimale mobile.
 
 ================================================================================
 FIN DU DOCUMENT DE RÉFÉRENCE

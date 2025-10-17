@@ -219,8 +219,19 @@ final List<PresetRate> presetRates = [
   // --- CATÉGORIE FUN : Sportifs Pros (Haute Estimation) ---
   // ====================================================================
   // Basé sur des estimations annuelles de salaire/contrat (hors sponsoring)
-  PresetRate(title: 'Kylian Mbappé (Est. Salaire Club)', rate: _toHourly(72000000), currency: '€', category: 'Sport / Fun', icon: '⚽'), // Rétabli, sur base 72M€/an
   PresetRate(title: 'Joueur Pro de Football (Ligue 1 Est.)', rate: 250.00, currency: '€', category: 'Sport / Fun', icon: '⚽'),
   PresetRate(title: 'Joueur NBA Star (Est. Moyenne Contrat)', rate: 1500.00, currency: '\$', category: 'Sport / Fun', icon: '🏀'),
   PresetRate(title: 'Joueur Pro eSport (Top Tier)', rate: 150.00, currency: '\$', category: 'Sport / Fun', icon: '🎮'),
+
+  // ====================================================================
+  // --- CATÉGORIE : Dreamlist - Métiers de Rêve & Célébrités ---
+  // ====================================================================
+  // Métiers de rêve et célébrités dans des domaines prestigieux
+  PresetRate(title: 'Kylian Mbappé (Est. Salaire Club)', rate: _toHourly(72000000), currency: '€', category: 'Dreamlist', icon: '⚽', sourceUrl: 'https://www.transfermarkt.fr/kylian-mbappe/profil/spieler/342229'),
+  PresetRate(title: 'Astronaute NASA (Salaire)', rate: _toHourly(100000), currency: '\$', category: 'Dreamlist', icon: '🚀', sourceUrl: 'https://www.nasa.gov/audience/forstudents/k-4/stories/nasa-knows/what-is-an-astronaut.html'),
+  PresetRate(title: 'Pilote de Formule 1 (Top)', rate: _toHourly(20000000), currency: '\$', category: 'Dreamlist', icon: '🏎️', sourceUrl: 'https://www.forbes.com/sites/csylt/2023/12/04/lewis-hamilton-earns-87-million-in-2023/'),
+  PresetRate(title: 'Réalisateur Hollywood (Top)', rate: _toHourly(20000000), currency: '\$', category: 'Dreamlist', icon: '🎬', sourceUrl: 'https://www.forbes.com/sites/dianafurchtgottroth/2023/08/09/the-highest-paid-directors-2023/'),
+  PresetRate(title: 'Chef Cuisinier 3 Étoiles Michelin', rate: _toHourly(150000), currency: '\$', category: 'Dreamlist', icon: '👨‍🍳', sourceUrl: 'https://www.michelin.com/en/restaurants/'),
+  PresetRate(title: 'Scientifique Prix Nobel', rate: _toHourly(100000), currency: '\$', category: 'Dreamlist', icon: '🔬', sourceUrl: 'https://www.nobelprize.org/'),
+  PresetRate(title: 'CEO Tech Unicorn (Top)', rate: _toHourly(1000000), currency: '\$', category: 'Dreamlist', icon: '💼', sourceUrl: 'https://www.forbes.com/sites/forbes-personal-shopper/article/tech-ceos-highest-paid/'),
 ];

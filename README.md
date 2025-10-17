@@ -7,20 +7,20 @@ Bienvenue dans **Time Is Money**, une application Flutter conçue pour visualise
 
 
 
-## ✨ État actuel (v1.4.2)
+## ✨ État actuel (v1.4.3)
 
-Version mineure publiée le 16/10/2025
+Version mineure publiée le 17/10/2025
 
-### 🆕 Nouveautés v1.4.2
+### 🆕 Nouveautés v1.4.3
 #### (voir CHANGELOG.txt pour détails)
 
-- **Mode Minuteur Révolutionnaire** : Comptage à rebours avec montant cible configurable
-- Affichage du temps restant en format dynamique (2 lignes avec heures)
-- Édition du montant cible via dialogue pop-up (comme l'édition du temps)
-- Bouton de switch mode désactivé visuellement quand timer actif
-- Édition du montant cible accessible sur toute la zone (pas seulement l'icône)
-- Bordure du timer quasi-invisible (0.01px) pour effet minimaliste
-- Effet de bordure navigante légèrement augmenté pour meilleure visibilité
+- **Système de Notifications Complet** : Timer terminé, jalons de gains, rappels horaires avec préférences configurables
+- **Animation de Célébration avec Smileys** : Particules animées quand le timer atteint zéro, avec enregistrement en arrière-plan
+- **Catégorie "Dreamlist"** : Jobs de rêve motivants (Kylian Mbappé, Astronaut NASA, Film Director Hollywood, etc.)
+- **Organisation en Accordéon des Presets** : Présentation collapsible pour une meilleure navigation
+- **Réorganisation des Tuiles de Réglages** : Gestion des Timers en premier, Notifications en second
+- **Améliorations Visuelles** : Bordure rouge 0.5px à zéro, ajustement à 0.2px normal, icône liste pour presets rapides
+- **Corrections Techniques** : Animation minuteur Flutter Chrome, mode immersif Android anti-chevauchement
 
 ---
 
