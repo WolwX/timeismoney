@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:timeismoney/providers/multi_timer_controller.dart';
 import 'package:timeismoney/models/preset_rates.dart';
 import 'package:timeismoney/screens/language_settings_screen.dart';
+import 'package:timeismoney/services/work_schedule_service.dart';
+import 'package:timeismoney/utils.dart';
 import 'dart:async'; 
 
 // Constante pour les conversions
@@ -82,31 +84,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       // Taux Horaire BRUT
       if (!_rateFocus.hasFocus) {
-        _rateController.text = newHourlyRate.toStringAsFixed(2);
+        _rateController.text = formatNumberWithSpaces(newHourlyRate, 2);
         _setSelectionToEnd(_rateController);
       }
       
       // Mensuel BRUT
       if (!_monthlyGrossFocus.hasFocus) {
-        _monthlyGrossController.text = newMonthlyGross.toStringAsFixed(2);
+        _monthlyGrossController.text = formatNumberWithSpaces(newMonthlyGross, 2);
         _setSelectionToEnd(_monthlyGrossController);
       }
       
       // Mensuel NET
       if (!_monthlyNetFocus.hasFocus) {
-        _monthlyNetController.text = newMonthlyNet.toStringAsFixed(2);
+        _monthlyNetController.text = formatNumberWithSpaces(newMonthlyNet, 2);
         _setSelectionToEnd(_monthlyNetController);
       }
       
       // Annuel BRUT
       if (!_annualGrossFocus.hasFocus) {
-        _annualGrossController.text = newAnnualGross.toStringAsFixed(2);
+        _annualGrossController.text = formatNumberWithSpaces(newAnnualGross, 2);
         _setSelectionToEnd(_annualGrossController);
       }
       
       // Annuel NET
       if (!_annualNetFocus.hasFocus) {
-        _annualNetController.text = newAnnualNet.toStringAsFixed(2);
+        _annualNetController.text = formatNumberWithSpaces(newAnnualNet, 2);
         _setSelectionToEnd(_annualNetController);
       }
       
@@ -144,13 +146,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final double initialAnnualNet = initialMonthlyNet * monthsPerYear;
 
     // Initialisation de tous les contrôleurs
-    _rateController = TextEditingController(text: initialHourlyRate.toStringAsFixed(2));
+    _rateController = TextEditingController(text: formatNumberWithSpaces(initialHourlyRate, 2));
     _currencyController = TextEditingController(text: controller.selectedTimer.currency);
     _netRateController = TextEditingController(text: controller.selectedTimer.netRatePercentage.toStringAsFixed(0));
-    _monthlyGrossController = TextEditingController(text: initialMonthlyGross.toStringAsFixed(2));
-    _monthlyNetController = TextEditingController(text: initialMonthlyNet.toStringAsFixed(2));
-    _annualGrossController = TextEditingController(text: initialAnnualGross.toStringAsFixed(2));
-    _annualNetController = TextEditingController(text: initialAnnualNet.toStringAsFixed(2));
+    _monthlyGrossController = TextEditingController(text: formatNumberWithSpaces(initialMonthlyGross, 2));
+    _monthlyNetController = TextEditingController(text: formatNumberWithSpaces(initialMonthlyNet, 2));
+    _annualGrossController = TextEditingController(text: formatNumberWithSpaces(initialAnnualGross, 2));
+    _annualNetController = TextEditingController(text: formatNumberWithSpaces(initialAnnualNet, 2));
     _weeklyHoursController = TextEditingController(text: controller.selectedTimer.weeklyHours.toStringAsFixed(1));
 
     // Initialisation des FocusNodes
@@ -516,7 +518,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              // Ligne 2 : 3 tuiles pour les presets
+              // Ligne 2 : 4 tuiles plus petites (Planning + autres fonctionnalités)
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSettingsTile(
+                      icon: Icons.schedule,
+                      title: 'Planning',
+                      color: Colors.indigo,
+                      onTap: () => _showWorkScheduleDialog(),
+                      isSmall: true,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSettingsTile(
+                      icon: Icons.backup,
+                      title: 'Sauvegarde\n& Restauration',
+                      color: Colors.brown,
+                      onTap: () => _showBackupDialog(),
+                      isSmall: true,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSettingsTile(
+                      icon: Icons.help_outline,
+                      title: 'Aide &\nSupport',
+                      color: Colors.cyan,
+                      onTap: () => _showHelpDialog(),
+                      isSmall: true,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSettingsTile(
+                      icon: Icons.info_outline,
+                      title: 'À propos',
+                      color: Colors.grey,
+                      onTap: () => _showAboutDialog(),
+                      isSmall: true,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Ligne 3 : 3 tuiles pour les presets
               Row(
                 children: [
                   Expanded(
@@ -614,16 +661,916 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         actions: [
-          TextButton(
+          TextButton.icon(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer'),
+            icon: const Icon(Icons.close, size: 18),
+            label: const Text('Fermer'),
           ),
         ],
       ),
     );
   }
 
-  // Dialog pour les préférences générales
+  // Dialog pour dupliquer les réglages d'un jour vers tous les autres jours
+  void _showCopyScheduleDialog(BuildContext context, WorkScheduleService workScheduleService, StateSetter setState) {
+    const daysOfWeek = [
+      {'key': 'monday', 'label': 'Lundi'},
+      {'key': 'tuesday', 'label': 'Mardi'},
+      {'key': 'wednesday', 'label': 'Mercredi'},
+      {'key': 'thursday', 'label': 'Jeudi'},
+      {'key': 'friday', 'label': 'Vendredi'},
+      {'key': 'saturday', 'label': 'Samedi'},
+      {'key': 'sunday', 'label': 'Dimanche'},
+    ];
+
+    String? selectedSourceDay;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Dupliquer les réglages'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Sélectionnez le jour source dont vous voulez copier les réglages :',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              ...daysOfWeek.map((day) {
+                final dayKey = day['key']!;
+                final dayLabel = day['label']!;
+                final schedule = workScheduleService.getDaySchedule(dayKey);
+                final hasTimeSlots = schedule.timeSlots.isNotEmpty;
+
+                return RadioListTile<String>(
+                  title: Text(
+                    '$dayLabel ${hasTimeSlots ? '(${schedule.timeSlots.length} plage${schedule.timeSlots.length > 1 ? 's' : ''})' : '(vide)'}',
+                    style: TextStyle(
+                      color: hasTimeSlots ? Colors.white : Colors.grey,
+                      fontSize: 14,
+                    ),
+                  ),
+                  value: dayKey,
+                  groupValue: selectedSourceDay,
+                  onChanged: hasTimeSlots ? (value) {
+                    setDialogState(() {
+                      selectedSourceDay = value;
+                    });
+                  } : null,
+                  activeColor: Colors.teal,
+                  dense: true,
+                );
+              }),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler'),
+            ),
+            ElevatedButton(
+              onPressed: selectedSourceDay == null ? null : () {
+                // Copier les réglages du jour source vers tous les autres jours
+                final sourceSchedule = workScheduleService.getDaySchedule(selectedSourceDay!);
+
+                for (final day in daysOfWeek) {
+                  final targetDayKey = day['key']!;
+                  if (targetDayKey != selectedSourceDay) {
+                    workScheduleService.updateDaySchedule(
+                      targetDayKey,
+                      WorkDaySchedule(
+                        enabled: sourceSchedule.enabled,
+                        timeSlots: List.from(sourceSchedule.timeSlots),
+                      ),
+                    );
+                  }
+                }
+
+                Navigator.pop(context);
+                setState(() {}); // Rafraîchir l'interface principale
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Réglages dupliqués depuis ${daysOfWeek.firstWhere((d) => d['key'] == selectedSourceDay)['label']}'),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
+              child: const Text('Dupliquer'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Dialog pour le planning de travail
+  void _showWorkScheduleDialog() async {
+    final controller = context.read<MultiTimerController>();
+    final workScheduleService = WorkScheduleService();
+
+    // Charger les horaires sauvegardés
+    final savedSchedule = await controller.storage.getWorkSchedule();
+    if (savedSchedule != null) {
+      workScheduleService.loadFromStorage(savedSchedule);
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 24), // Réduire les marges externes
+          titlePadding: const EdgeInsets.fromLTRB(16, 16, 16, 8), // Marges du titre
+          contentPadding: EdgeInsets.zero, // Supprimer les marges du contenu
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('⏰', style: TextStyle(fontSize: 22)),
+                    const SizedBox(width: 8),
+                    const Text('Planning'),
+                  ],
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Bouton ON/OFF pour activer/désactiver le planning
+                    Switch(
+                      value: workScheduleService.isEnabled,
+                      onChanged: (value) {
+                        workScheduleService.setEnabled(value);
+                        setState(() {}); // Rafraîchir le titre
+                      },
+                      activeColor: Colors.teal,
+                      activeTrackColor: Colors.teal.withOpacity(0.3),
+                      inactiveThumbColor: Colors.grey,
+                      inactiveTrackColor: Colors.grey.withOpacity(0.3),
+                    ),
+                    const SizedBox(width: 8),
+                    // Bouton pour dupliquer les réglages
+                    IconButton(
+                      icon: const Icon(Icons.copy, size: 20, color: Colors.teal),
+                      onPressed: () => _showCopyScheduleDialog(context, workScheduleService, setState),
+                      tooltip: 'Dupliquer les réglages vers tous les jours',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            // Indication visuelle du timer sélectionné et état du planning
+            if (controller.timers.length > 1)
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: workScheduleService.isEnabled
+                      ? (controller.selectedTimerIndex == 0 ? Colors.amber.withOpacity(0.2) : Colors.grey.withOpacity(0.2))
+                      : Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: workScheduleService.isEnabled
+                        ? (controller.selectedTimerIndex == 0 ? Colors.amber : Colors.grey)
+                        : Colors.grey.withOpacity(0.5),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      workScheduleService.isEnabled ? Icons.timer : Icons.timer_off,
+                      size: 16,
+                      color: workScheduleService.isEnabled
+                          ? (controller.selectedTimerIndex == 0 ? Colors.amber : Colors.grey)
+                          : Colors.grey.withOpacity(0.7),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      workScheduleService.isEnabled
+                          ? 'Configuration du Timer ${controller.selectedTimerIndex + 1} (${controller.selectedTimerIndex == 0 ? 'Or' : 'Argent'})'
+                          : 'Planning désactivé - Configuration du Timer ${controller.selectedTimerIndex + 1}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: workScheduleService.isEnabled
+                            ? (controller.selectedTimerIndex == 0 ? Colors.amber : Colors.grey)
+                            : Colors.grey.withOpacity(0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        content: Padding(
+          padding: const EdgeInsets.all(16.0), // Ajouter de l'espacement autour du contenu
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Icônes de sélection de timer
+              if (controller.timers.length > 1)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  alignment: Alignment.center,
+                  child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Enregistrer sur le timer ',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () {
+                        controller.selectTimer(0);
+                        Navigator.pop(context);
+                        _showWorkScheduleDialog();
+                      },
+                      child: Tooltip(
+                        message: 'Timer 1 (Or)',
+                        child: Opacity(
+                          opacity: controller.selectedTimerIndex == 0 ? 1.0 : 0.5,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                            child: SizedBox(
+                              width: 38,
+                              height: 38,
+                              child: Stack(
+                                children: [
+                                  Center(
+                                    child: Icon(
+                                      Icons.timer,
+                                      color: const Color(0xFFFFD700),
+                                      size: 34,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    right: 2,
+                                    bottom: 2,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(1.5),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.7),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Text(
+                                        '1',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          height: 1,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        controller.selectTimer(1);
+                        Navigator.pop(context);
+                        _showWorkScheduleDialog();
+                      },
+                      child: Tooltip(
+                        message: 'Timer 2 (Argent)',
+                        child: Opacity(
+                          opacity: controller.selectedTimerIndex == 1 ? 1.0 : 0.5,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                            child: SizedBox(
+                              width: 38,
+                              height: 38,
+                              child: Stack(
+                                children: [
+                                  Center(
+                                    child: Icon(
+                                      Icons.timer,
+                                      color: const Color(0xFFC0C0C0),
+                                      size: 34,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    right: 2,
+                                    bottom: 2,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(1.5),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.7),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Text(
+                                        '2',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          height: 1,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            // Contenu scrollable
+            Expanded(
+              child: Scrollbar(
+                thickness: 6,
+                radius: const Radius.circular(3),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.only(right: 16), // Espace pour l'ascenseur
+                  child: _buildWorkScheduleContent(workScheduleService, controller, () => setState(() {})),
+                ),
+              ),
+            ),
+          ],
+        ),
+        ),
+        actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.close, size: 18),
+            label: const Text('Annuler'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () async {
+              // Sauvegarder les horaires
+              final scheduleJson = workScheduleService.saveToStorage();
+              await controller.storage.setWorkSchedule(scheduleJson);
+              
+              // Fermer le dialog d'abord
+              Navigator.pop(context);
+              
+              // Puis afficher le message de confirmation
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Planning sauvegardé !')),
+                  );
+                }
+              });
+            },
+            icon: const Icon(Icons.save, size: 18),
+            label: const Text('Sauvegarder'),
+          ),
+        ],
+      ),
+    ),
+  );
+  }
+
+  // Widget pour le contenu du planning de travail
+  Widget _buildWorkScheduleContent(WorkScheduleService workScheduleService, MultiTimerController controller, VoidCallback onStateChanged) {
+    const daysOfWeek = [
+      {'key': 'monday', 'label': 'Lundi'},
+      {'key': 'tuesday', 'label': 'Mardi'},
+      {'key': 'wednesday', 'label': 'Mercredi'},
+      {'key': 'thursday', 'label': 'Jeudi'},
+      {'key': 'friday', 'label': 'Vendredi'},
+      {'key': 'saturday', 'label': 'Samedi'},
+      {'key': 'sunday', 'label': 'Dimanche'},
+    ];
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Définissez vos horaires de travail pour automatiser la pause/reprise des timers.',
+          style: TextStyle(fontSize: 14, color: Colors.grey),
+        ),
+        const SizedBox(height: 16),
+        ...daysOfWeek.map((day) {
+          final dayKey = day['key']!;
+          final dayLabel = day['label']!;
+          final schedule = workScheduleService.getDaySchedule(dayKey);
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // En-tête du jour avec case à cocher
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 120,
+                      child: Row(
+                        children: [
+                          Checkbox(
+                            value: schedule.enabled,
+                            onChanged: (value) {
+                              if (value != null) {
+                                workScheduleService.toggleDayEnabled(dayKey, value);
+                                onStateChanged(); // Force rebuild
+                              }
+                            },
+                            activeColor: Colors.teal,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              dayLabel,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Bouton pour ajouter une plage horaire (toujours visible)
+                    IconButton(
+                      icon: const Icon(Icons.add, size: 20, color: Colors.teal),
+                      onPressed: () {
+                        workScheduleService.addTimeSlot(
+                          dayKey,
+                          const TimeSlot(startTime: '09:00', endTime: '17:00'),
+                        );
+                        onStateChanged(); // Force rebuild
+                      },
+                      tooltip: 'Ajouter une plage horaire',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+                // Affichage des plages horaires (toujours au moins une visible)
+                if (schedule.timeSlots.isNotEmpty)
+                  ...schedule.timeSlots.asMap().entries.map((entry) {
+                    final slotIndex = entry.key;
+                    final slot = entry.value;
+
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
+                      child: Row(
+                        children: [
+                          // Numéro de la plage
+                          Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: schedule.enabled
+                                  ? Colors.teal.withOpacity(0.2)
+                                  : Colors.grey.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${slotIndex + 1}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: schedule.enabled ? Colors.teal : Colors.grey,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Sélecteur d'heure de début
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => _selectTime(
+                                context,
+                                initialTime: _parseTimeString(slot.startTime),
+                                onTimeSelected: (time) {
+                                  final newSlot = TimeSlot(
+                                    startTime: '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+                                    endTime: slot.endTime,
+                                  );
+                                  workScheduleService.updateTimeSlot(dayKey, slotIndex, newSlot);
+                                  onStateChanged(); // Force rebuild
+                                },
+                              ),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: schedule.enabled ? Colors.teal : Colors.grey,
+                                    width: 1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: schedule.enabled
+                                      ? Colors.teal.withOpacity(0.1)
+                                      : Colors.grey.withOpacity(0.1),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Début',
+                                      style: TextStyle(
+                                        color: schedule.enabled ? Colors.white : Colors.grey,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    Text(
+                                      slot.startTime,
+                                      style: TextStyle(
+                                        color: schedule.enabled ? Colors.teal : Colors.grey,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Sélecteur d'heure de fin
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => _selectTime(
+                                context,
+                                initialTime: _parseTimeString(slot.endTime),
+                                onTimeSelected: (time) {
+                                  final newSlot = TimeSlot(
+                                    startTime: slot.startTime,
+                                    endTime: '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+                                  );
+                                  workScheduleService.updateTimeSlot(dayKey, slotIndex, newSlot);
+                                  onStateChanged(); // Force rebuild
+                                },
+                              ),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: schedule.enabled ? Colors.orange : Colors.grey,
+                                    width: 1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: schedule.enabled
+                                      ? Colors.orange.withOpacity(0.1)
+                                      : Colors.grey.withOpacity(0.1),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Fin',
+                                      style: TextStyle(
+                                        color: schedule.enabled ? Colors.white : Colors.grey,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    Text(
+                                      slot.endTime,
+                                      style: TextStyle(
+                                        color: schedule.enabled ? Colors.orange : Colors.grey,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Bouton de suppression (si plus d'une plage)
+                          if (schedule.timeSlots.length > 1)
+                            IconButton(
+                              icon: const Icon(Icons.remove, size: 20, color: Colors.red),
+                              onPressed: () {
+                                workScheduleService.removeTimeSlot(dayKey, slotIndex);
+                                onStateChanged(); // Force rebuild
+                              },
+                              tooltip: 'Supprimer cette plage',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                        ],
+                      ),
+                    );
+                  }),
+              ],
+            ),
+          );
+        }),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.blue.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.blue, width: 1),
+          ),
+          child: const Text(
+            '💡 Le timer se mettra automatiquement en pause en dehors de ces horaires et reprendra automatiquement quand vous rentrez dans vos heures de travail.',
+            style: TextStyle(fontSize: 12, color: Colors.blue),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Méthode utilitaire pour parser une string HH:MM en TimeOfDay
+  TimeOfDay _parseTimeString(String timeString) {
+    final parts = timeString.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
+  // Méthode pour afficher le sélecteur d'heure
+  Future<void> _selectTime(BuildContext context, {
+    required TimeOfDay initialTime,
+    required Function(TimeOfDay) onTimeSelected,
+  }) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Colors.teal,
+              onPrimary: Colors.white,
+              surface: Color(0xFF1E1E1E),
+              onSurface: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      onTimeSelected(picked);
+    }
+  }
+  void _showBackupDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('💾 Sauvegarde & Restauration'),
+        content: const SingleChildScrollView(
+          child: Text('Fonctionnalité en développement...\n\nCette fonctionnalité vous permettra de sauvegarder et restaurer vos paramètres et données.'),
+        ),
+        actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.close, size: 18),
+            label: const Text('Fermer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Dialog "À propos"
+  void _showAboutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('📱 À propos'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Time Is Money', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              SizedBox(height: 8),
+              Text('Version 1.4.5'),
+              SizedBox(height: 16),
+              Text(
+                'Une application Flutter conçue pour visualiser la valeur de votre temps en argent. '
+                'Elle calcule et affiche vos gains en temps réel, basés sur un taux horaire configurable, '
+                'avec support de 36 pays et leurs salaires minimums réels.',
+                style: TextStyle(height: 1.4),
+              ),
+              SizedBox(height: 20),
+              Text('Développé avec amour ❤️ en Flutter par XR 💻 (Xavier Redondo) et l\'aide précieuse de l\'IA 🤖'),
+              SizedBox(height: 24),
+              Text('Liens utiles :', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 12),
+              InkWell(
+                onTap: () async {
+                  final url = Uri.parse('https://github.com/WolwX/TimeIsMoney');
+                  try {
+                    await launchUrl(url);
+                  } catch (_) {}
+                },
+                child: Row(
+                  children: [
+                    Icon(Icons.link, size: 20, color: Colors.blue),
+                    SizedBox(width: 8),
+                    Text(
+                      '📂 Repository GitHub',
+                      style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 8),
+              InkWell(
+                onTap: () async {
+                  final url = Uri.parse('https://github.com/WolwX/TimeIsMoney/issues');
+                  try {
+                    await launchUrl(url);
+                  } catch (_) {}
+                },
+                child: Row(
+                  children: [
+                    Icon(Icons.bug_report, size: 20, color: Colors.orange),
+                    SizedBox(width: 8),
+                    Text(
+                      '🐛 Signaler un bug',
+                      style: TextStyle(color: Colors.orange, decoration: TextDecoration.underline),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 8),
+              InkWell(
+                onTap: () async {
+                  final url = Uri.parse('https://github.com/WolwX/TimeIsMoney/releases');
+                  try {
+                    await launchUrl(url);
+                  } catch (_) {}
+                },
+                child: Row(
+                  children: [
+                    Icon(Icons.new_releases, size: 20, color: Colors.green),
+                    SizedBox(width: 8),
+                    Text(
+                      '📦 Versions & Téléchargements',
+                      style: TextStyle(color: Colors.green, decoration: TextDecoration.underline),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.close, size: 18),
+            label: const Text('Fermer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Dialog d'aide avec formulaire de contact
+  void _showHelpDialog() {
+    final TextEditingController emailController = TextEditingController();
+    final TextEditingController messageController = TextEditingController();
+    String selectedCategory = 'Général';
+
+    final List<String> categories = [
+      'Général',
+      'Fonctionnalités',
+      'Configuration',
+      'Presets',
+      'Planning',
+      'Notifications',
+      'Bug/Erreur',
+      'Autre'
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('❓ Aide & Support'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Contactez-nous',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 16),
+                const Text('Catégorie de votre question :'),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: selectedCategory,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  items: categories.map((category) {
+                    return DropdownMenuItem<String>(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() => selectedCategory = value!);
+                  },
+                ),
+                const SizedBox(height: 16),
+                const Text('Votre email :'),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'votre.email@exemple.com',
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+                const Text('Votre message :'),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: messageController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Décrivez votre question ou problème...',
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  maxLines: 5,
+                  maxLength: 500,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton.icon(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.close, size: 18),
+              label: const Text('Fermer'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                if (emailController.text.isEmpty || messageController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Veuillez remplir tous les champs')),
+                  );
+                  return;
+                }
+
+                final subject = '[Time Is Money] $selectedCategory';
+                final body = '''
+Catégorie: $selectedCategory
+Email: ${emailController.text}
+
+Message:
+${messageController.text}
+
+---
+Envoyé depuis l'application Time Is Money
+                ''';
+
+                final Uri emailUri = Uri(
+                  scheme: 'mailto',
+                  path: 'wolwx@hotmail.com',
+                  queryParameters: {
+                    'subject': subject,
+                    'body': body,
+                  },
+                );
+
+                try {
+                  await launchUrl(emailUri);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Client email ouvert !')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Impossible d\'ouvrir le client email')),
+                  );
+                }
+              },
+              icon: const Icon(Icons.send, size: 18),
+              label: const Text('Envoyer'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
   void _showGeneralPreferencesDialog() {
     final controller = context.read<MultiTimerController>();
     final List<Map<String, String>> currencies = [
@@ -690,9 +1637,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         actions: [
-          TextButton(
+          TextButton.icon(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer'),
+            icon: const Icon(Icons.close, size: 18),
+            label: const Text('Fermer'),
           ),
         ],
       ),
@@ -753,9 +1701,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         actions: [
-          TextButton(
+          TextButton.icon(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer'),
+            icon: const Icon(Icons.close, size: 18),
+            label: const Text('Fermer'),
           ),
         ],
       ),
@@ -893,9 +1842,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: _buildSettingsSection(controller),
         ),
         actions: [
-          TextButton(
+          TextButton.icon(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer'),
+            icon: const Icon(Icons.close, size: 18),
+            label: const Text('Fermer'),
           ),
         ],
       ),
@@ -950,16 +1900,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // Dialog pour les presets Dreamlist
   void _showDreamlistPresetsDialog(MultiTimerController controller) {
     final groupedPresets = _groupPresets(presetRates);
-    // Filtrer uniquement la catégorie "Dreamlist"
-    final dreamlistCategories = {
-      'Dreamlist': groupedPresets['Dreamlist'] ?? [],
+    // Grouper les presets Dreamlist en sous-catégories
+    final dreamlistSubcategories = {
+      'Métiers de Rêve': (groupedPresets['Dreamlist'] ?? []).where((p) => p.category == 'Dreamlist' && p.icon != '🎰').toList(),
+      'Gains Loterie': (groupedPresets['Dreamlist'] ?? []).where((p) => p.category == 'Dreamlist' && p.icon == '🎰').toList(),
     };
     
     showDialog(
       context: context,
       builder: (context) => _PresetsDialog(
         title: '✨ Presets Dreamlist',
-        groupedPresets: dreamlistCategories,
+        groupedPresets: dreamlistSubcategories,
         controller: controller,
         categoryIcons: _categoryIcons,
       ),
@@ -999,7 +1950,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               subtitle: Text(
-                '${timer.currency} ${timer.hourlyRate.toStringAsFixed(2)}/h',
+                '${timer.currency} ${formatNumberWithSpaces(timer.hourlyRate, 2)}/h',
                 style: const TextStyle(color: Colors.white70),
               ),
               trailing: Row(
@@ -1163,6 +2114,7 @@ class _PresetsDialogState extends State<_PresetsDialog> {
                           ),
                           const SizedBox(height: 6),
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               IconButton(
                                 tooltip: 'Appliquer au Timer 1',
@@ -1242,11 +2194,11 @@ class _PresetsDialogState extends State<_PresetsDialog> {
                                 ],
                               ),
                             ),
-                          _buildPresetDetail('Horaire', '${preset.rate.toStringAsFixed(2)} ${preset.currency}/h', Colors.tealAccent),
-                          _buildPresetDetail('Mensuel Brut', '${monthlyGross.toStringAsFixed(2)} ${preset.currency}', Colors.greenAccent),
-                          _buildPresetDetail('Mensuel Net', '${monthlyNet.toStringAsFixed(2)} ${preset.currency}', Colors.green),
-                          _buildPresetDetail('Annuel Brut', '${annualGross.toStringAsFixed(2)} ${preset.currency}', Colors.yellowAccent),
-                          _buildPresetDetail('Annuel Net', '${annualNet.toStringAsFixed(2)} ${preset.currency}', Colors.yellow),
+                          _buildPresetDetail('Horaire', '${formatNumberWithSpaces(preset.rate, 2)} ${preset.currency}/h', Colors.tealAccent),
+                          _buildPresetDetail('Mensuel Brut', '${formatNumberWithSpaces(monthlyGross, 2)} ${preset.currency}', Colors.greenAccent),
+                          _buildPresetDetail('Mensuel Net', '${formatNumberWithSpaces(monthlyNet, 2)} ${preset.currency}', Colors.green),
+                          _buildPresetDetail('Annuel Brut', '${formatNumberWithSpaces(annualGross, 2)} ${preset.currency}', Colors.yellowAccent),
+                          _buildPresetDetail('Annuel Net', '${formatNumberWithSpaces(annualNet, 2)} ${preset.currency}', Colors.yellow),
                         ],
                       ),
                     ),
@@ -1258,12 +2210,12 @@ class _PresetsDialogState extends State<_PresetsDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        TextButton.icon(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Fermer'),
+          icon: const Icon(Icons.close, size: 18),
+          label: const Text('Fermer'),
         ),
       ],
     );
   }
-  // La suite du code de build doit être dans une méthode de widget, pas ici !
 }

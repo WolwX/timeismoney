@@ -1,10 +1,10 @@
 # PROJECT_CONTEXT (machine-friendly)
 
-Last updated: 2025-10-17
+Last updated: 2025-10-19
 
 ## Overview
 - **Project**: Time Is Money (Flutter app)
-- **Version**: 1.4.3 (pubspec.yaml: 1.4.3+171025)
+- **Version**: 1.4.5 (pubspec.yaml: 1.4.5+191025)
 - **Framework**: Flutter (SDK >=3.0.0)
 - **State management**: Provider (ChangeNotifier)
 - **Persistence**: SharedPreferences behind IStorageService
@@ -60,9 +60,18 @@ Last updated: 2025-10-17
   - Bordure rouge 0.5px quand timer atteint zéro (feedback visuel)
   - Mode immersif Android pour éviter chevauchement des barres système
   - Corrections techniques pour animation minuteur sur Flutter Chrome
+
+- **NEW in v1.4.5**
+  - Améliorations majeures du dialogue Planning (espacement, centrage, texte "Enregistrer sur le timer")
+  - Icônes cohérentes sur tous les boutons de dialogue (Fermer/Annuler/Enregistrer)
+  - Page "À Propos" complètement refondue avec description détaillée et liens utiles
+  - Formulaire de contact intégré remplaçant l'ancien dialogue d'aide
+  - Réorganisation des presets loterie dans Dreamlist avec sous-catégories
+  - Formatage des nombres avec séparateurs de milliers (100 000€ au lieu de 100000€)
+  - Fonction utilitaire formatNumberWithSpaces() pour cohérence dans toute l'app
 - `FooterBar` (`lib/widgets/footer_bar.dart`): Version display
   - Reads version from pubspec.yaml → PackageInfo fallback
-  - Format: v1.4.1.151025
+  - Format: v1.4.5.191025
 
 ### Screens
 - `SplashScreen`: Animated hourglass intro
@@ -307,6 +316,15 @@ flutter build windows
 - ✅ User-configurable notification preferences
 - ✅ Celebration animation with smileys and background recording
 - ✅ Android immersive mode for better full-screen experience
+
+### Priority 3.5: UI/UX Improvements (v1.4.5 COMPLETED)
+- ✅ Enhanced Planning dialog (spacing, centering, "Enregistrer sur le timer" text)
+- ✅ Consistent icons on all dialog buttons (Close/Cancel/Save)
+- ✅ Complete About page redesign with description and useful links
+- ✅ Integrated contact form replacing old help dialog
+- ✅ Lottery presets reorganization in Dreamlist with subcategories
+- ✅ Number formatting with thousand separators (100 000€ format)
+- ✅ formatNumberWithSpaces() utility function for consistency
 
 ### Priority 4: UI/UX Improvements
 - More than 2 timers (grid layout)

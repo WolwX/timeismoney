@@ -1,3 +1,118 @@
+Date : 19/10/2025
+
+--------------------------------------------------------------------------------
+V. 1.4.5 - Améliorations UI, Tuiles À Propos & Aide, Fonctionnalités Avancées
+--------------------------------------------------------------------------------
+
+NOUVEAUTÉS MAJEURES
+
+- Mise à jour de la version d'application dans pubspec.yaml : 1.4.5+191025
+
+* **Améliorations Majeures du Dialogue Planning :**
+    * Augmentation de l'espacement entre la bordure et le contenu pour une meilleure lisibilité
+    * Centrage de la zone de sélection de timer pour un meilleur équilibre visuel
+    * Ajout du texte "Enregistrer sur le timer" devant les icônes de sélection (style blanc subtil)
+    * Amélioration de l'ergonomie générale du dialogue
+
+* **Icônes sur Tous les Boutons de Dialogue :**
+    * Ajout d'icônes cohérentes sur tous les boutons Fermer/Annuler/Enregistrer
+    * Icône "close" (✗) pour les boutons d'annulation
+    * Icône "save" (💾) pour les boutons de sauvegarde
+    * Application uniforme sur tous les dialogues (Planning, Notifications, Taux, Conversions, Préférences, À propos)
+
+* **Page "À Propos" Complètement Refondue :**
+    * Ajout du titre complet de l'application et numéro de version
+    * Description détaillée de l'application et de ses fonctionnalités
+    * Section développeur avec icône ordinateur repositionnée et crédits détaillés
+    * Liens utiles vers GitHub et autres ressources
+    * Mise en page moderne et professionnelle
+
+* **Formulaire de Contact Intégré :**
+    * Transformation de l'ancien dialogue d'aide en formulaire de contact fonctionnel
+    * Champ email pré-rempli (wolwx@hotmail.com)
+    * Bouton d'envoi qui ouvre le client email par défaut
+    * Validation et feedback utilisateur
+
+* **Réorganisation des Presets Loterie :**
+    * Déplacement des presets de loterie dans la catégorie "Dreamlist"
+    * Création de sous-catégories "Métiers de Rêve" et "Gains Loterie"
+    * Meilleure organisation et navigation dans les presets
+
+* **Formatage des Nombres avec Séparateurs de Milliers :**
+    * Tous les montants monétaires affichés avec espaces comme séparateurs (100 000€ au lieu de 100000€)
+    * Application uniforme sur tous les affichages (timer, presets, calculs, etc.)
+    * Amélioration de la lisibilité pour les grands nombres
+
+AMÉLIORATIONS TECHNIQUES
+
+* **Fonction Utilitaire de Formatage :**
+    * Nouvelle fonction `formatNumberWithSpaces()` dans utils.dart
+    * Gestion automatique des décimales et séparateurs
+    * Utilisation cohérente dans toute l'application
+
+* **Améliorations de l'Architecture UI :**
+    * TextButton.icon standardisé pour tous les boutons de dialogue
+    * Cohérence visuelle améliorée entre tous les dialogues
+    * Meilleure accessibilité avec tooltips et icônes explicites
+
+* **Optimisations des Performances :**
+    * Réduction des rebuilds inutiles dans les dialogues
+    * Amélioration de la gestion mémoire pour les gros nombres
+
+================================================================================
+CHANGELOG
+================================================================================
+
+Date : 15/10/2025
+
+--------------------------------------------------------------------------------
+V. 1.4.0 - Système de Planning de Travail Complet
+--------------------------------------------------------------------------------
+
+NOUVEAUTÉS MAJEURES
+
+- Mise à jour de la version d'application dans pubspec.yaml : 1.4.0+151025
+
+* **Système de Planning de Travail Révolutionnaire :**
+    * Fonctionnalité complète de planification des horaires de travail
+    * Interface intuitive pour définir les horaires par jour de la semaine
+    * Sélection du timer associé au planning (support multi-timer)
+    * Activation/désactivation globale du système de planning
+    * Persistence automatique des réglages
+
+* **Gestion Avancée des Horaires :**
+    * Définition d'horaires de début et fin pour chaque jour
+    * Support des pauses déjeuner configurables
+    * Calcul automatique des heures travaillées
+    * Interface de duplication pour appliquer les mêmes horaires à tous les jours
+
+* **Intégration avec le Système Multi-Timer :**
+    * Association automatique du planning au timer sélectionné
+    * Changement dynamique selon le timer actif
+    * Indicateurs visuels du timer configuré dans l'interface
+
+* **Interface Utilisateur Optimisée :**
+    * Dialogue modal dédié avec scroll optimisé
+    * Indicateurs visuels d'état (activé/désactivé)
+    * Feedback utilisateur avec messages de confirmation
+    * Design cohérent avec le reste de l'application
+
+AMÉLIORATIONS TECHNIQUES
+
+* **Service de Persistence Spécialisé :**
+    * `WorkScheduleService` pour gestion centralisée des données de planning
+    * Stockage JSON structuré et optimisé
+    * Récupération automatique au démarrage de l'application
+
+* **Architecture Stateful pour les Dialogues :**
+    * Utilisation de `StatefulBuilder` pour les mises à jour dynamiques
+    * Gestion d'état local pour les modifications en temps réel
+    * Synchronisation avec le contrôleur principal
+
+================================================================================
+CHANGELOG
+================================================================================
+
 Date : 17/10/2025
 
 --------------------------------------------------------------------------------
@@ -130,13 +245,15 @@ NOUVEAUTÉS
 * Correction de détails visuels sur les dialogues de réglages
 
 --------------------------------------------------------------------------------
-Date : 15/10/2025
+Date : 18/10/2025
 
 --------------------------------------------------------------------------------
-V. 1.4.0 - Refonte UI/UX, Dialogues, Multi-timer, Presets avancés
+V. 1.4.0 - Système de Planning de Travail Complet
 --------------------------------------------------------------------------------
 
 NOUVEAUTÉS MAJEURES
+
+- Mise à jour de la version d'application dans pubspec.yaml : 1.4.0+181025
 
 * Refonte complète de la page Réglages : navigation par tuiles (3+2), centrage vertical
 * Dialogues overlays pour chaque catégorie
@@ -147,6 +264,42 @@ NOUVEAUTÉS MAJEURES
 * Corrections Flutter Web (liens), robustesse accrue
 * Système Multi-Timer : gestion de 2 timers indépendants, activation/désactivation, synchronisation, affichage dynamique
 * Correction et nettoyage du code, robustesse accrue
+
+* **Système de Planning de Travail Révolutionnaire :**
+    * Fonctionnalité complète de planification des horaires de travail
+    * Interface intuitive pour définir les horaires par jour de la semaine
+    * Sélection du timer associé au planning (support multi-timer)
+    * Activation/désactivation globale du système de planning
+    * Persistence automatique des réglages
+
+* **Gestion Avancée des Horaires :**
+    * Définition d'horaires de début et fin pour chaque jour
+    * Support des pauses déjeuner configurables
+    * Calcul automatique des heures travaillées
+    * Interface de duplication pour appliquer les mêmes horaires à tous les jours
+
+* **Intégration avec le Système Multi-Timer :**
+    * Association automatique du planning au timer sélectionné
+    * Changement dynamique selon le timer actif
+    * Indicateurs visuels du timer configuré dans l'interface
+
+* **Interface Utilisateur Optimisée :**
+    * Dialogue modal dédié avec scroll optimisé
+    * Indicateurs visuels d'état (activé/désactivé)
+    * Feedback utilisateur avec messages de confirmation
+    * Design cohérent avec le reste de l'application
+
+AMÉLIORATIONS TECHNIQUES
+
+* **Service de Persistence Spécialisé :**
+    * `WorkScheduleService` pour gestion centralisée des données de planning
+    * Stockage JSON structuré et optimisé
+    * Récupération automatique au démarrage de l'application
+
+* **Architecture Stateful pour les Dialogues :**
+    * Utilisation de `StatefulBuilder` pour les mises à jour dynamiques
+    * Gestion d'état local pour les modifications en temps réel
+    * Synchronisation avec le contrôleur principal
 
 --------------------------------------------------------------------------------
 CHANGELOG

@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:timeismoney/providers/timer_controller.dart';
-import 'package:timeismoney/models/preset_rates.dart'; 
+import 'package:timeismoney/models/preset_rates.dart';
+import 'package:timeismoney/utils.dart';
 import 'dart:async'; 
 
 // Constante pour les conversions
@@ -82,31 +83,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       // Taux Horaire BRUT
       if (!_rateFocus.hasFocus) {
-        _rateController.text = newHourlyRate.toStringAsFixed(2);
+        _rateController.text = formatNumberWithSpaces(newHourlyRate, 2);
         _setSelectionToEnd(_rateController);
       }
       
       // Mensuel BRUT
       if (!_monthlyGrossFocus.hasFocus) {
-        _monthlyGrossController.text = newMonthlyGross.toStringAsFixed(2);
+        _monthlyGrossController.text = formatNumberWithSpaces(newMonthlyGross, 2);
         _setSelectionToEnd(_monthlyGrossController);
       }
       
       // Mensuel NET
       if (!_monthlyNetFocus.hasFocus) {
-        _monthlyNetController.text = newMonthlyNet.toStringAsFixed(2);
+        _monthlyNetController.text = formatNumberWithSpaces(newMonthlyNet, 2);
         _setSelectionToEnd(_monthlyNetController);
       }
       
       // Annuel BRUT
       if (!_annualGrossFocus.hasFocus) {
-        _annualGrossController.text = newAnnualGross.toStringAsFixed(2);
+        _annualGrossController.text = formatNumberWithSpaces(newAnnualGross, 2);
         _setSelectionToEnd(_annualGrossController);
       }
       
       // Annuel NET
       if (!_annualNetFocus.hasFocus) {
-        _annualNetController.text = newAnnualNet.toStringAsFixed(2);
+        _annualNetController.text = formatNumberWithSpaces(newAnnualNet, 2);
         _setSelectionToEnd(_annualNetController);
       }
       
@@ -143,13 +144,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final double initialAnnualNet = initialMonthlyNet * monthsPerYear;
 
     // Initialisation de tous les contrôleurs
-    _rateController = TextEditingController(text: initialHourlyRate.toStringAsFixed(2));
+    _rateController = TextEditingController(text: formatNumberWithSpaces(initialHourlyRate, 2));
     _currencyController = TextEditingController(text: controller.currency);
     _netRateController = TextEditingController(text: controller.netRatePercentage.toStringAsFixed(0));
-    _monthlyGrossController = TextEditingController(text: initialMonthlyGross.toStringAsFixed(2));
-    _monthlyNetController = TextEditingController(text: initialMonthlyNet.toStringAsFixed(2));
-    _annualGrossController = TextEditingController(text: initialAnnualGross.toStringAsFixed(2));
-    _annualNetController = TextEditingController(text: initialAnnualNet.toStringAsFixed(2));
+    _monthlyGrossController = TextEditingController(text: formatNumberWithSpaces(initialMonthlyGross, 2));
+    _monthlyNetController = TextEditingController(text: formatNumberWithSpaces(initialMonthlyNet, 2));
+    _annualGrossController = TextEditingController(text: formatNumberWithSpaces(initialAnnualGross, 2));
+    _annualNetController = TextEditingController(text: formatNumberWithSpaces(initialAnnualNet, 2));
     _weeklyHoursController = TextEditingController(text: controller.weeklyHours.toStringAsFixed(1));
 
     // Initialisation des FocusNodes

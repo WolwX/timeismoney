@@ -234,4 +234,29 @@ final List<PresetRate> presetRates = [
   PresetRate(title: 'Chef Cuisinier 3 Étoiles Michelin', rate: _toHourly(150000), currency: '\$', category: 'Dreamlist', icon: '👨‍🍳', sourceUrl: 'https://www.michelin.com/en/restaurants/'),
   PresetRate(title: 'Scientifique Prix Nobel', rate: _toHourly(100000), currency: '\$', category: 'Dreamlist', icon: '🔬', sourceUrl: 'https://www.nobelprize.org/'),
   PresetRate(title: 'CEO Tech Unicorn (Top)', rate: _toHourly(1000000), currency: '\$', category: 'Dreamlist', icon: '💼', sourceUrl: 'https://www.forbes.com/sites/forbes-personal-shopper/article/tech-ceos-highest-paid/'),
+  
+  // ====================================================================
+  // --- CATÉGORIE : Dreamlist - Gains de Loterie ---
+  // ====================================================================
+  // Taux horaires basés sur le rendement annuel de gains de loterie placés à 5%
+  PresetRate(
+    title: 'Euromillions Record (220M€ à 5%)', 
+    rate: 5288.46, // 220M€ × 5% = 11M€/an ÷ 2080h = 5288.46€/h
+    currency: '€', 
+    category: 'Dreamlist', 
+    netRatePercentage: 100.0, // Revenus déjà nets (intérêts)
+    weeklyHours: 35.0, // Utilise les heures françaises par défaut
+    icon: '🎰',
+    sourceUrl: 'https://www.francetvinfo.fr/replay-jt/france-2/20-heures/record-du-montant-du-jackpot-euromillions-avec-220-millions-d-euros_3785091.html'
+  ),
+  PresetRate(
+    title: 'Powerball Record (2.04M\$ à 5%)', 
+    rate: 44471.15, // 2.04M\$ × 5% = 102k\$/an ÷ 2080h = 44471.15\$/h  
+    currency: '\$', 
+    category: 'Dreamlist', 
+    netRatePercentage: 100.0, // Revenus déjà nets (intérêts)
+    weeklyHours: 35.0, // Utilise les heures françaises par défaut
+    icon: '🎰',
+    sourceUrl: 'https://www.powerball.com/powerball-record'
+  ),
 ];

@@ -314,10 +314,17 @@ class MultiTimerController extends ChangeNotifier {
   }
 
   void stopTimer(int index) {
-    if (index < 0 || index >= _timers.length) return;
+    if (index < 0 || index >= _timers.length) {
+      debugPrint('stopTimer called with invalid index: $index, timers length: ${_timers.length}');
+      return;
+    }
     final timer = _timers[index];
-    if (!timer.isRunning) return;
+    if (!timer.isRunning) {
+      debugPrint('stopTimer called but timer ${timer.name} is not running');
+      return;
+    }
 
+    debugPrint('Stopping timer ${timer.name} at index $index');
     timer.internalTimer?.cancel();
     timer.isRunning = false;
     timer.recalculateTime();
@@ -325,6 +332,7 @@ class MultiTimerController extends ChangeNotifier {
     timer.sessionStartTime = null;
     saveTimers();
     notifyListeners();
+    debugPrint('Timer ${timer.name} stopped successfully, isRunning: ${timer.isRunning}');
   }
 
   void resetTimer(int index) {
@@ -495,7 +503,11 @@ class MultiTimerController extends ChangeNotifier {
                           (timer.targetAmount != null && timer.currentGains >= timer.targetAmount!);
         
         if (shouldStop) {
-          stopTimer(timer.id);
+          debugPrint('Timer ${timer.name} reached 0 - remainingTime: $remainingTime, currentGains: ${timer.currentGains}, targetAmount: ${timer.targetAmount}, isRunning: ${timer.isRunning}');
+          final timerIndex = _timers.indexOf(timer);
+          debugPrint('Timer index: $timerIndex, timers length: ${_timers.length}');
+          stopTimer(timerIndex);
+          debugPrint('After stopTimer - isRunning: ${timer.isRunning}');
           // Notification pour la fin du timer si activée
           if (_notificationsEnabled && _timerFinishedNotificationsEnabled) {
             notificationService.showTimerFinishedNotification(
@@ -511,6 +523,7 @@ class MultiTimerController extends ChangeNotifier {
               triggeredAt: DateTime.now(),
               targetAmount: timer.targetAmount,
               currency: timer.currency,
+              achievedTime: timer.elapsedDuration, // Temps réellement passé
             ));
           }
         }

@@ -1,6 +1,6 @@
 PROJECT REFERENCE FILE
 ================================================================================
-DERNIÈRE MISE À JOUR : 17/10/2025
+DERNIÈRE MISE À JOUR : 19/10/2025
 BUT DU PROJET : Application Flutter de chronométrage financier ("Time Is Money") affichant les gains en temps réel basés sur un taux horaire paramétrable avec support multi-timer, base de données internationale de salaires minimums, système de notifications complet et animations de célébration.
 CONTEXTE TECHNIQUE : 
     - Framework : Flutter
@@ -10,11 +10,20 @@ CONTEXTE TECHNIQUE :
     - Architecture : MVVM avec models, controllers, widgets réutilisables
 
 --------------------------------------------------------------------------------
-1. ÉTAT ACTUEL DE L'APPLICATION (V. 1.4.3, pubspec.yaml: 1.4.3+171025)
+1. ÉTAT ACTUEL DE L'APPLICATION (V. 1.4.5, pubspec.yaml: 1.4.5+191025)
 --------------------------------------------------------------------------------
 
 FONCTIONNALITÉS COMPLÈTES :
 
+
+**NOUVEAUTÉS MAJEURES EN V1.4.5 :**
+* Améliorations majeures du dialogue Planning (espacement augmenté, centrage de la zone timer, texte "Enregistrer sur le timer")
+* Icônes cohérentes sur tous les boutons de dialogue (Fermer/Annuler/Enregistrer avec icônes appropriées)
+* Page "À Propos" complètement refondue avec titre complet, description détaillée, crédits développeur et liens utiles
+* Formulaire de contact intégré remplaçant l'ancien dialogue d'aide (email pré-rempli, envoi via client mail)
+* Réorganisation des presets loterie dans la catégorie Dreamlist avec sous-catégories "Métiers de Rêve" et "Gains Loterie"
+* Formatage des nombres avec séparateurs de milliers (100 000€ au lieu de 100000€) dans toute l'application
+* Fonction utilitaire formatNumberWithSpaces() pour cohérence et lisibilité
 
 **NOUVEAUTÉS MAJEURES EN V1.4.3 :**
 * Système de notifications push locales complet (timer terminé, jalons de gains, rappels horaires)
@@ -117,6 +126,14 @@ FONCTIONNALITÉS COMPLÈTES :
 33. **Mode Immersif Android :** SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky)
 34. **Support Encoches :** android.notch_support="true" dans AndroidManifest.xml
 
+**AMÉLIORATIONS UI ET FONCTIONNALITÉS (V1.4.5) :**
+35. **Dialogue Planning Amélioré :** Espacement augmenté, centrage zone timer, texte "Enregistrer sur le timer"
+36. **Icônes Cohérentes :** Boutons Fermer/Annuler/Enregistrer avec icônes appropriées sur tous les dialogues
+37. **Page À Propos Refondue :** Titre complet, description détaillée, crédits développeur, liens utiles
+38. **Formulaire Contact :** Remplacement dialogue aide, email pré-rempli, envoi via client mail
+39. **Presets Loterie Réorganisés :** Déplacement dans Dreamlist avec sous-catégories "Métiers de Rêve" et "Gains Loterie"
+40. **Formatage Nombres :** Séparateurs milliers (100 000€), fonction formatNumberWithSpaces() pour cohérence
+
 FICHIERS CLÉS ET RÔLES :
 
 **MODELS :**
@@ -166,11 +183,12 @@ FICHIERS CLÉS ET RÔLES :
 
 * `lib/widgets/footer_bar.dart` : Barre de footer avec version et crédits
     - Lecture version depuis pubspec.yaml (rootBundle), fallback PackageInfo
-    - Format : v1.4.3.171025
+    - Format : v1.5.0.191025
     - Rôle : Affichage version et crédits
 
-* `lib/widgets/animated_hourglass.dart` : Sablier animé (CustomPainter) pour splash
-* `lib/widgets/falling_currency.dart` : Particules animées de symboles monétaires
+* `lib/utils.dart` : Fonctions utilitaires (NOUVEAU v1.5.0)
+    - formatNumberWithSpaces(double, int) : Formatage nombres avec séparateurs milliers (100 000.00)
+    - Utilisation : Cohérence dans toute l'application pour montants monétaires
 
 **SCREENS :**
 * `lib/screens/home_screen.dart` : Écran principal avec layout adaptatif
@@ -266,6 +284,14 @@ DONNÉES INTERNATIONALES (V1.3.0) :
 * ✅ **Améliorations Visuelles :** Bordure rouge à zéro, mode immersif Android
 * ✅ **Corrections Techniques :** Animation minuteur Flutter Chrome, logique arrêt timer améliorée
 
+**FONCTIONNALITÉS COMPLÉTÉES EN V1.5.0 :**
+* ✅ **Dialogue Planning Amélioré :** Espacement augmenté, centrage zone timer, texte "Enregistrer sur le timer"
+* ✅ **Icônes Cohérentes :** Boutons Fermer/Annuler/Enregistrer avec icônes sur tous les dialogues
+* ✅ **Page À Propos Refondue :** Titre complet, description détaillée, crédits développeur, liens utiles
+* ✅ **Formulaire Contact Intégré :** Remplacement dialogue aide, email pré-rempli, envoi client mail
+* ✅ **Presets Loterie Réorganisés :** Déplacement dans Dreamlist avec sous-catégories
+* ✅ **Formatage Nombres :** Séparateurs milliers (100 000€), fonction utilitaire pour cohérence
+
 **AMÉLIORATIONS FUTURES :**
 * Support de plus de 2 timers simultanés (grille responsive).
 * Mode sombre/clair personnalisable.
@@ -279,16 +305,16 @@ DONNÉES INTERNATIONALES (V1.3.0) :
 
 **FORMAT DE VERSION :**
 * Schéma : `MAJOR.MINOR.PATCH+DDMMYY`
-* Exemple : `1.4.3+171025` (version 1.4.3, build du 17 octobre 2025)
+* Exemple : `1.5.0+191025` (version 1.5.0, build du 19 octobre 2025)
 * Fichier source : `pubspec.yaml` (property `version`)
 
 **AFFICHAGE VERSION :**
 * FooterBar suit cette priorité : explicit param → pubspec.yaml asset → PackageInfo.
-* Format affiché : `v1.4.3.171025` (le + est remplacé par . pour lisibilité).
+* Format affiché : `v1.5.0.191025` (le + est remplacé par . pour lisibilité).
 * Splash screen affiche une version simplifiée : `v1.4`.3.
 
 **WORKFLOW DE MISE À JOUR :**
-1. Modifier `version` dans `pubspec.yaml` (ex: `1.4.2+161025` → `1.4.3+171025`).
+1. Modifier `version` dans `pubspec.yaml` (ex: `1.4.3+171025` → `1.5.0+191025`).
 2. Exécuter `flutter pub get` pour empaqueter pubspec.yaml comme asset.
 3. Mettre à jour CHANGELOG.txt avec les nouvelles fonctionnalités.
 4. Mettre à jour version hardcodée dans splash_screen.dart si nécessaire.

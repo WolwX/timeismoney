@@ -6,7 +6,7 @@ import 'package:timeismoney/providers/multi_timer_controller.dart';
 import 'package:timeismoney/screens/settings_screen.dart';
 import 'package:timeismoney/widgets/footer_bar.dart';
 import 'package:timeismoney/widgets/timer_display.dart';
-import 'package:timeismoney/widgets/celebration_animation.dart';
+import 'package:timeismoney/widgets/celebration_overlay.dart';
 import 'package:timeismoney/services/celebration_manager.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -18,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   bool _showCelebration = false;
+  PendingCelebration? _currentCelebration; // Nouvelle variable pour stocker la célébration en cours
 
   @override
   void initState() {
@@ -58,19 +59,34 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _triggerCelebration() {
+    // Vérification de sécurité : ne pas lancer l'animation si déjà active
+    if (_showCelebration) {
+      debugPrint('Celebration already active, skipping');
+      return;
+    }
+
+    // Récupérer la célébration en attente
+    final celebrationManager = context.read<CelebrationManager>();
+    final celebration = celebrationManager.consumeNextCelebration();
+    if (celebration == null) {
+      debugPrint('No pending celebration found');
+      return;
+    }
+
+    debugPrint('Triggering celebration overlay for timer: ${celebration.timerName}');
     setState(() {
       _showCelebration = true;
+      _currentCelebration = celebration;
     });
   }
 
   void _onCelebrationComplete() {
     setState(() {
       _showCelebration = false;
+      _currentCelebration = null; // Nettoyer la célébration en cours
     });
 
-    // Consommer la célébration terminée
-    final celebrationManager = context.read<CelebrationManager>();
-    celebrationManager.consumeNextCelebration();
+    // Plus besoin de consommer la célébration ici car c'est fait dans _triggerCelebration
   }
 
   @override
@@ -172,10 +188,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               FooterBar(creatorName: 'XR'),
             ],
           ),
-          // Animation de célébration en overlay
-          if (_showCelebration)
-            CelebrationAnimation(
-              onAnimationComplete: _onCelebrationComplete,
+          // Overlay de célébration
+          if (_showCelebration && _currentCelebration != null)
+            CelebrationOverlay(
+              achievedTime: _currentCelebration!.achievedTime,
+              onDismiss: _onCelebrationComplete,
             ),
         ],
       ),
@@ -217,9 +234,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             child: TimerDisplay(
               timer: timer,
               timerIndex: index,
-              onStart: () => controller.startTimer(index),
-              onStop: () => controller.stopTimer(index),
-              onReset: () => controller.resetTimer(index),
+              onStart: () {
+                debugPrint('HomeScreen onStart called for timer $index - _showCelebration: $_showCelebration');
+                controller.startTimer(index);
+              },
+              onStop: () {
+                debugPrint('HomeScreen onStop called for timer $index - _showCelebration: $_showCelebration');
+                controller.stopTimer(index);
+              },
+              onReset: () {
+                debugPrint('HomeScreen onReset called for timer $index - _showCelebration: $_showCelebration');
+                controller.resetTimer(index);
+              },
               onTimeEdited: () => controller.editTimerTime(index),
               isCompact: true, // Mode compact pour avoir le format à 2 lignes
               isSingleView: true, // Vue single timer - polices plus grandes

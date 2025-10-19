@@ -39,10 +39,12 @@ class CelebrationParticle {
 /// Widget d'animation de célébration avec des smileys
 class CelebrationAnimation extends StatefulWidget {
   final VoidCallback? onAnimationComplete;
+  final VoidCallback? onAnimationCancelled; // Nouveau callback pour annulation
 
   const CelebrationAnimation({
     super.key,
     this.onAnimationComplete,
+    this.onAnimationCancelled,
   });
 
   @override
@@ -54,25 +56,20 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
   final List<CelebrationParticle> _particles = [];
   late AnimationController _controller;
   Timer? _particleTimer;
+  Timer? _safetyTimer; // Timer de sécurité pour éviter les blocages
+
+  // Limite de particules pour éviter la surcharge
+  static const int _maxParticles = 10; // Réduit drastiquement à 10 particules max
 
   // Liste des smileys à utiliser
   final List<String> _emojis = [
-    '🎉', '🎊', '✨', '🎈', '🎆', '🎇', '🎀', '🎁',
-    '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣',
-    '🥳', '😎', '🤩', '😍', '🥰', '😘', '😉', '😊',
-    '💯', '🔥', '⭐', '🌟', '💫', '✨', '💥', '🎯',
+    '🎉', '✨', '�', // Réduit la liste pour moins de variété
   ];
 
   final List<Color> _colors = [
     Colors.yellow,
     Colors.orange,
     Colors.red,
-    Colors.pink,
-    Colors.purple,
-    Colors.blue,
-    Colors.cyan,
-    Colors.green,
-    Colors.lime,
   ];
 
   @override
@@ -80,16 +77,25 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(milliseconds: 1500), // Réduit à 1.5 secondes
     );
 
     _controller.addListener(_updateParticles);
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        widget.onAnimationComplete?.call();
+        _completeAnimation();
       }
     });
 
+    // Timer de sécurité : arrêter l'animation après 2 secondes maximum (réduit de 3)
+    _safetyTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) {
+        debugPrint('CelebrationAnimation: Safety timer triggered');
+        _forceStopAnimation();
+      }
+    });
+
+    debugPrint('CelebrationAnimation: Starting animation');
     _startAnimation();
   }
 
@@ -97,8 +103,8 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
     // Créer des particules initiales
     _createParticles();
 
-    // Programmer la création de nouvelles particules
-    _particleTimer = Timer.periodic(const Duration(milliseconds: 200), (_) {
+    // Programmer la création de nouvelles particules beaucoup moins fréquemment
+    _particleTimer = Timer.periodic(const Duration(milliseconds: 1000), (_) { // Augmenté à 1 seconde
       if (_controller.isAnimating) {
         _createParticles();
       }
@@ -111,8 +117,9 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
     final random = Random();
     final screenSize = MediaQuery.of(context).size;
 
-    // Créer 5-10 particules à chaque fois
-    final particleCount = 5 + random.nextInt(6);
+    // Créer très peu de particules à chaque fois
+    final particleCount = min(1 + random.nextInt(2), _maxParticles - _particles.length); // Réduit à 1-2 particules max
+    if (particleCount <= 0) return; // Ne pas créer si on atteint la limite
 
     for (int i = 0; i < particleCount; i++) {
       final startX = screenSize.width / 2 + (random.nextDouble() - 0.5) * 100;
@@ -135,7 +142,7 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
   }
 
   void _updateParticles() {
-    final deltaTime = 1 / 60.0; // 60 FPS
+    final deltaTime = 1 / 15.0; // Réduit à 15 FPS pour soulager encore plus le CPU
 
     // Mettre à jour toutes les particules
     for (final particle in _particles) {
@@ -145,19 +152,44 @@ class _CelebrationAnimationState extends State<CelebrationAnimation>
     // Supprimer les particules mortes
     _particles.removeWhere((particle) => particle.isDead());
 
+    // Si plus de particules et animation terminée, nettoyer
+    if (_particles.isEmpty && !_controller.isAnimating) {
+      _completeAnimation();
+    }
+
     setState(() {});
+  }
+
+  // Méthode appelée quand l'animation se termine normalement
+  void _completeAnimation() {
+    _cleanup();
+    widget.onAnimationComplete?.call();
+  }
+
+  // Méthode pour forcer l'arrêt de l'animation (timeout ou clic utilisateur)
+  void _forceStopAnimation() {
+    _cleanup();
+    widget.onAnimationCancelled?.call();
+  }
+
+  // Nettoyer toutes les ressources
+  void _cleanup() {
+    _controller.stop();
+    _particleTimer?.cancel();
+    _safetyTimer?.cancel();
+    _particles.clear();
   }
 
   @override
   void dispose() {
+    _cleanup();
     _controller.dispose();
-    _particleTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return IgnorePointer(
+    return IgnorePointer( // Retour à IgnorePointer pour éviter les interférences de gestes
       child: CustomPaint(
         painter: CelebrationPainter(particles: _particles),
         size: Size.infinite,

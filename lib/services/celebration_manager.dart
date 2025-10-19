@@ -11,12 +11,14 @@ class PendingCelebration {
   final DateTime triggeredAt;
   final double? targetAmount;
   final String currency;
+  final Duration achievedTime; // Nouveau : temps réellement réalisé
 
   PendingCelebration({
     required this.timerName,
     required this.triggeredAt,
     this.targetAmount,
     required this.currency,
+    required this.achievedTime, // Nouveau paramètre requis
   });
 
   Map<String, dynamic> toJson() => {
@@ -24,6 +26,7 @@ class PendingCelebration {
     'triggeredAt': triggeredAt.toIso8601String(),
     'targetAmount': targetAmount,
     'currency': currency,
+    'achievedTime': achievedTime.inSeconds, // Stocker en secondes
   };
 
   factory PendingCelebration.fromJson(Map<String, dynamic> json) => PendingCelebration(
@@ -31,6 +34,7 @@ class PendingCelebration {
     triggeredAt: DateTime.parse(json['triggeredAt']),
     targetAmount: json['targetAmount'],
     currency: json['currency'],
+    achievedTime: Duration(seconds: json['achievedTime'] ?? 0), // Charger depuis secondes
   );
 }
 

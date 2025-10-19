@@ -5,6 +5,7 @@ import 'package:timeismoney/services/exchange_rate_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:timeismoney/providers/multi_timer_controller.dart';
+import 'package:timeismoney/utils.dart';
 // ...existing code...
 // Widget pour édition inline du montant gagné en mode normal
 class _NormalEditableAmount extends StatefulWidget {
@@ -33,14 +34,14 @@ class _NormalEditableAmountState extends State<_NormalEditableAmount> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.amount.toStringAsFixed(2));
+    _controller = TextEditingController(text: formatNumberWithSpaces(widget.amount, 2));
   }
 
   @override
   void didUpdateWidget(covariant _NormalEditableAmount oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.amount != double.tryParse(_controller.text.replaceAll(',', '.'))) {
-      _controller.text = widget.amount.toStringAsFixed(2);
+      _controller.text = formatNumberWithSpaces(widget.amount, 2);
     }
     if (!widget.isEditing && _editing) {
       setState(() {
@@ -125,7 +126,7 @@ class _NormalEditableAmountState extends State<_NormalEditableAmount> {
             const SizedBox(width: 4),
           ],
           Text(
-            (widget.amount > 0 ? widget.amount : 0.00).toStringAsFixed(2),
+            formatNumberWithSpaces(widget.amount > 0 ? widget.amount : 0.00, 2),
             style: textStyle,
           ),
         ],
@@ -177,7 +178,7 @@ class _TimerDisplayState extends State<TimerDisplay> with SingleTickerProviderSt
     );
     
     // Démarre l'animation si le timer est actif
-    if (widget.timer.isRunning) {
+    if (_isEffectivelyRunning()) {
       _rotationController.repeat();
     }
   }
@@ -185,10 +186,11 @@ class _TimerDisplayState extends State<TimerDisplay> with SingleTickerProviderSt
   @override
   void didUpdateWidget(TimerDisplay oldWidget) {
     super.didUpdateWidget(oldWidget);
+    debugPrint('TimerDisplay didUpdateWidget - timer: ${widget.timer.name}, isRunning: ${widget.timer.isRunning}, old isRunning: ${oldWidget.timer.isRunning}');
     // Synchronise l'animation avec l'état du timer
-    if (widget.timer.isRunning && !_rotationController.isAnimating) {
+    if (_isEffectivelyRunning() && !_rotationController.isAnimating) {
       _rotationController.repeat();
-    } else if (!widget.timer.isRunning && _rotationController.isAnimating) {
+    } else if (!_isEffectivelyRunning() && _rotationController.isAnimating) {
       _rotationController.stop();
     }
   }
@@ -197,6 +199,23 @@ class _TimerDisplayState extends State<TimerDisplay> with SingleTickerProviderSt
   void dispose() {
     _rotationController.dispose();
     super.dispose();
+  }
+
+  // Helper to determine if the timer should be considered "effectively running".
+  // In reverse (minuteur) mode we treat the timer as stopped when remaining time is null or <= 0
+  // or when a target amount was reached. This keeps the UI (rotation, buttons, colors)
+  // consistent with the actual finished state.
+  bool _isEffectivelyRunning() {
+    if (!widget.timer.isRunning) return false;
+
+    if (widget.timer.isReverseMode) {
+      final remaining = widget.timer.getRemainingTime();
+      final bool shouldStop = remaining == null || remaining.inSeconds <= 0 ||
+          (widget.timer.targetAmount != null && widget.timer.currentGains >= widget.timer.targetAmount!);
+      return !shouldStop;
+    }
+
+    return true;
   }
 
   // Fonction pour afficher le dialogue d'édition du temps
@@ -350,7 +369,7 @@ class _TimerDisplayState extends State<TimerDisplay> with SingleTickerProviderSt
     final currentAmount = widget.timer.targetAmount ?? 10.00;
     
     final amountController = TextEditingController(
-      text: currentAmount.toStringAsFixed(2)
+      text: formatNumberWithSpaces(currentAmount, 2)
     );
 
     showDialog(
@@ -420,7 +439,7 @@ class _TimerDisplayState extends State<TimerDisplay> with SingleTickerProviderSt
                 
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Montant cible modifié : ${widget.timer.currency} ${targetAmount.toStringAsFixed(2)}'),
+                    content: Text('Montant cible modifié : ${widget.timer.currency} ${formatNumberWithSpaces(targetAmount, 2)}'),
                     backgroundColor: Colors.green,
                     duration: const Duration(seconds: 2),
                   ),
@@ -631,7 +650,7 @@ class _TimerDisplayState extends State<TimerDisplay> with SingleTickerProviderSt
 
   // Fonction utilitaire pour formater l'argent avec 2 décimales
   String formatMoney(double amount) {
-    return '${widget.timer.currency} ${amount.toStringAsFixed(2)}';
+    return '${widget.timer.currency} ${formatNumberWithSpaces(amount, 2)}';
   }
 
   // Méthode pour déterminer la couleur de la bordure
@@ -708,6 +727,8 @@ class _TimerDisplayState extends State<TimerDisplay> with SingleTickerProviderSt
     final Color timerColor = widget.timerIndex == 0 
         ? const Color(0xFFFFD700) // Or (Gold)
         : const Color(0xFFC0C0C0); // Argent (Silver)
+
+    final bool effectivelyRunning = _isEffectivelyRunning();
 
     return AnimatedBuilder(
       animation: _rotationController,
@@ -792,7 +813,7 @@ class _TimerDisplayState extends State<TimerDisplay> with SingleTickerProviderSt
             ),
           // Ligne de rappel du taux horaire net
           Text(
-            '(${hourlyNet.toStringAsFixed(2)} ${widget.timer.currency}/h net)',
+            '(${formatNumberWithSpaces(hourlyNet, 2)} ${widget.timer.currency}/h net)',
             style: TextStyle(
               fontSize: widget.isSingleView ? 14 : 12, // Single: 14, Multi: 12
               fontStyle: FontStyle.italic,
@@ -890,7 +911,7 @@ class _TimerDisplayState extends State<TimerDisplay> with SingleTickerProviderSt
                     const SizedBox(width: 4),
                     // Montant cible affiché (non éditable inline)
                     Text(
-                      (widget.timer.targetAmount ?? 10.00).toStringAsFixed(2),
+                      formatNumberWithSpaces(widget.timer.targetAmount ?? 10.00, 2),
                       style: TextStyle(
                         fontSize: amountFontSize,
                         fontWeight: FontWeight.w900,
@@ -992,7 +1013,7 @@ class _TimerDisplayState extends State<TimerDisplay> with SingleTickerProviderSt
                 return Padding(
                   padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 0, bottom: 0),
                   child: Text(
-                    '≈ $preferredCurrency ${convertedAmount.toStringAsFixed(2)}',
+                    '≈ $preferredCurrency ${formatNumberWithSpaces(convertedAmount, 2)}',
                     style: TextStyle(
                       fontSize: gainFontSize * 0.4,
                       fontWeight: FontWeight.w900,
@@ -1027,7 +1048,7 @@ class _TimerDisplayState extends State<TimerDisplay> with SingleTickerProviderSt
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: GestureDetector(
-                onTap: !widget.timer.isRunning ? () => _showEditTimeDialog(context) : null,
+                onTap: !effectivelyRunning ? () => _showEditTimeDialog(context) : null,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -1114,9 +1135,33 @@ class _TimerDisplayState extends State<TimerDisplay> with SingleTickerProviderSt
                         size: widget.isCompact ? 20 : 28,
                       ),
                       label: Text(widget.timer.isRunning ? 'STOP' : 'START'),
-                      onPressed: widget.timer.isRunning ? widget.onStop : widget.onStart,
+                      onPressed: () {
+                        final remainingTime = widget.timer.getRemainingTime();
+                        final isAtZero = remainingTime == null || remainingTime.inSeconds <= 0;
+                        final shouldDisableStart = widget.timer.isReverseMode && isAtZero;
+                        
+                        if (widget.timer.isRunning) {
+                          return widget.onStop;
+                        } else if (!shouldDisableStart) {
+                          return widget.onStart;
+                        } else {
+                          return null; // Désactiver le bouton START seulement en mode timer quand le temps est à 0
+                        }
+                      }(),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: widget.timer.isRunning ? Colors.red : Colors.green,
+                        backgroundColor: () {
+                          final remainingTime = widget.timer.getRemainingTime();
+                          final isAtZero = remainingTime == null || remainingTime.inSeconds <= 0;
+                          final shouldDisableStart = widget.timer.isReverseMode && isAtZero;
+                          
+                          if (widget.timer.isRunning) {
+                            return Colors.red;
+                          } else if (shouldDisableStart) {
+                            return Colors.grey; // Gris seulement en mode timer quand le temps est à 0
+                          } else {
+                            return Colors.green;
+                          }
+                        }(),
                         padding: EdgeInsets.symmetric(vertical: widget.isCompact ? 12 : 20),
                         textStyle: TextStyle(fontSize: widget.isCompact ? 16 : 24, fontWeight: FontWeight.bold),
                         shape: RoundedRectangleBorder(
@@ -1166,45 +1211,62 @@ class _TimerDisplayState extends State<TimerDisplay> with SingleTickerProviderSt
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.easeInOut,
                 width: 120,
-                height: 40,
+                height: 55,
                 decoration: BoxDecoration(
                   color: widget.timer.isRunning
                       ? Colors.grey.shade800.withOpacity(0.5)
-                      : widget.timer.isReverseMode ? Colors.amber.shade700 : Colors.grey.shade900,
+                      : widget.timer.isReverseMode ? Colors.orange.shade800 : Colors.orange.shade400,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: widget.timer.isRunning
                         ? Colors.grey.shade600
-                        : widget.timer.isReverseMode ? Colors.amber : Colors.tealAccent,
+                        : widget.timer.isReverseMode ? Colors.orange.shade600 : Colors.orange.shade300,
                     width: 2,
                   ),
                 ),
                 child: Stack(
                   children: [
                     AnimatedAlign(
-                      alignment: widget.timer.isReverseMode ? Alignment.centerRight : Alignment.centerLeft,
+                      alignment: widget.timer.isReverseMode ? Alignment.topRight : Alignment.topLeft,
                       duration: const Duration(milliseconds: 250),
                       curve: Curves.easeInOut,
                       child: Container(
                         width: 56,
                         height: 32,
-                        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                        margin: const EdgeInsets.only(top: 2, bottom: 20, left: 4, right: 4),
                         decoration: BoxDecoration(
                           color: widget.timer.isRunning
                               ? Colors.grey.shade600
-                              : widget.timer.isReverseMode ? Colors.black : Colors.tealAccent,
+                              : widget.timer.isReverseMode ? Colors.black : Colors.orange.shade600,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
                           widget.timer.isReverseMode ? Icons.hourglass_bottom : Icons.timer,
                           color: widget.timer.isRunning
                               ? Colors.grey.shade400
-                              : widget.timer.isReverseMode ? Colors.amber : Colors.black,
+                              : widget.timer.isReverseMode ? Colors.orange : Colors.white,
                           size: 22,
                         ),
                       ),
                     ),
-                    // Pas de texte, seulement les icônes
+                    // Texte descriptif du mode en dessous de l'animation
+                    Positioned(
+                      bottom: 4,
+                      left: 0,
+                      right: 0,
+                      child: Text(
+                        widget.timer.isReverseMode ? 'MINUTEUR' : 'CHRONOMÈTRE',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          fontFeatures: [const FontFeature.enable('smcp')], // Small caps
+                          color: widget.timer.isRunning
+                              ? Colors.grey.shade400
+                              : widget.timer.isReverseMode ? Colors.orange.shade200 : Colors.white,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

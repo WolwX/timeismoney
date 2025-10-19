@@ -47,6 +47,10 @@ abstract class IStorageService {
   Future<bool?> getCelebrationAnimationEnabled();
   Future<void> setCelebrationAnimationEnabled(bool enabled);
 
+  // Work schedule
+  Future<String?> getWorkSchedule();
+  Future<void> setWorkSchedule(String scheduleJson);
+
   // Generic string storage for complex data (JSON)
   Future<String?> getString(String key);
   Future<void> setString(String key, String value);
@@ -69,6 +73,7 @@ class StorageService implements IStorageService {
   static const String _kWeeklyHoursKey = 'weeklyHours';
   static const String _kNotificationsEnabledKey = 'notificationsEnabled';
   static const String _kTimerFinishedNotificationsEnabledKey = 'timerFinishedNotificationsEnabled';
+  static const String _kWorkScheduleKey = 'workSchedule';
   static const String _kGainMilestoneNotificationsEnabledKey = 'gainMilestoneNotificationsEnabled';
   static const String _kHourlyNotificationsEnabledKey = 'hourlyNotificationsEnabled';
   static const String _kCelebrationAnimationEnabledKey = 'celebrationAnimationEnabled';
@@ -245,5 +250,16 @@ class StorageService implements IStorageService {
   Future<void> setString(String key, String value) async {
     final prefs = await _prefs;
     await prefs.setString(key, value);
+  }
+
+  // Méthodes pour le planning de travail
+  Future<String?> getWorkSchedule() async {
+    final prefs = await _prefs;
+    return prefs.getString(_kWorkScheduleKey);
+  }
+
+  Future<void> setWorkSchedule(String scheduleJson) async {
+    final prefs = await _prefs;
+    await prefs.setString(_kWorkScheduleKey, scheduleJson);
   }
 }

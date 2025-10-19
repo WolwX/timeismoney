@@ -10,8 +10,8 @@ import 'package:timeismoney/services/storage_service.dart';
 import 'package:timeismoney/services/notification_service.dart';
 import 'package:timeismoney/services/celebration_manager.dart';
 import 'package:timeismoney/l10n/app_localizations.dart';
-// Import du HomeScreen
-import 'package:timeismoney/screens/home_screen.dart'; 
+// Import du SplashScreen
+import 'package:timeismoney/screens/splash_screen.dart'; 
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +31,9 @@ Future<void> main() async {
     celebrationManager: celebrationManager,
   );
   await controller.init();
+
+  // Réactiver la célébration avec le nouvel overlay léger
+  await controller.setCelebrationAnimationEnabled(true);
 
   // Initialisation du service de synchronisation du temps
   // final timeSyncService = TimeSyncService();
@@ -79,8 +82,8 @@ class TimeIsMoneyApp extends StatelessWidget {
             primarySwatch: Colors.teal,
             scaffoldBackgroundColor: Colors.black,
           ),
-          // Démarrage sur le HomeScreen
-          home: const HomeScreen(), 
+          // Démarrage sur le SplashScreen
+          home: const SplashScreen(), 
         );
       },
     );

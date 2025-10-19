@@ -1,7 +1,7 @@
 name: timeismoney
 description: Application ludique et utilitaire pour visualiser en temps réel l'argent que l'on gagne.
 publish_to: 'none'
-version: 1.4.3+171025
+version: 1.4.5+191025
 
 environment:
   sdk: '>=3.0.0 <4.0.0' 
@@ -63,3 +63,7 @@ flutter_launcher_icons:
   linux:
     generate: true
     image_path: "assets/images/app_icon.png"
+
+# Configuration du nom de l'application pour toutes les plateformes
+flutter_launcher_name:
+  name: "Time Is Money"
