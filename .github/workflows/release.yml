@@ -26,22 +26,29 @@ jobs:
         echo "Version détectée: $VERSION"
       shell: pwsh
     
-    # 3. Installe Flutter
+    # 3. Setup Java pour Android
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+    
+    # 4. Installe Flutter
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
         flutter-version: '3.35.5'
         channel: stable
     
-    # 4. Installe les dépendances
+    # 5. Installe les dépendances
     - name: Install dependencies
       run: flutter pub get
     
-    # 5. Build Windows
+    # 6. Build Windows
     - name: Build Windows Release
       run: flutter build windows --release
     
-    # 6. Copie les DLL nécessaires dans le build
+    # 7. Copie les DLL nécessaires dans le build
     - name: Copy required DLLs
       run: |
         New-Item -ItemType Directory -Force -Path "build/windows/x64/runner/Release/dll"
@@ -53,7 +60,7 @@ jobs:
         }
       shell: pwsh
     
-    # 7. Compresse le build Windows avec version dans le nom
+    # 8. Compresse le build Windows avec version dans le nom
     - name: Archive Windows Build
       run: |
         $VERSION = "${{ steps.get_version.outputs.VERSION }}"
@@ -62,11 +69,19 @@ jobs:
         echo "Archive créée: TimeIsMoney-Windows-v$VERSION.zip"
       shell: pwsh
     
-    # 8. Build Android APK
+    # 9. Build Android APK
+    - name: Clean Flutter build for Android
+      run: flutter clean
+      
+    - name: Get Flutter dependencies for Android
+      run: flutter pub get
+
     - name: Build Android APK
-      run: flutter build apk --release
+      run: flutter build apk --release --verbose
+      env:
+        JAVA_HOME: ${{ env.JAVA_HOME }}
     
-    # 9. Renomme l'APK avec la version
+    # 10. Renomme l'APK avec la version
     - name: Rename APK with version
       run: |
         $VERSION = "${{ steps.get_version.outputs.VERSION }}"
@@ -74,7 +89,7 @@ jobs:
         echo "APK créé: TimeIsMoney-v$VERSION.apk"
       shell: pwsh
     
-    # 10. Crée la Release GitHub
+    # 11. Crée la Release GitHub
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
